@@ -1,294 +1,524 @@
 <!doctype html>
 <html lang="hu">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TanárSegéd PRO</title>
-  <meta name="description" content="TanárSegéd PRO – jegykalkulátor, feladatlap-generátor, óravázlat, értékelő szöveg, szülői üzenet és tanári admin segéd egy helyen." />
-  <meta property="og:title" content="TanárSegéd PRO" />
-  <meta property="og:description" content="Jegyek, dolgozatok, feladatlapok, óravázlatok és szülői üzenetek gyorsan, tanároknak." />
-  <meta name="theme-color" content="#2563eb" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TanárSegéd PRO v6</title>
+<meta name="description" content="TanárSegéd PRO v6 – tantárgyanként külön feladatlap-generátor valódi kérdésekkel.">
+<style>
+:root{--bg:#f4f7fb;--panel:#fff;--text:#14213d;--muted:#68748a;--primary:#2563eb;--border:#dfe7f3;--danger:#dc2626;--shadow:0 20px 60px rgba(20,33,61,.12);--radius:22px}
+*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(circle at top left,#dbeafe,transparent 35%),var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}input,select,textarea{width:100%;border:1px solid var(--border);border-radius:14px;padding:13px 14px;background:#fbfdff;color:var(--text);outline:none}
+textarea{resize:vertical;line-height:1.45}button{border:0;border-radius:14px;background:var(--primary);color:#fff;padding:12px 16px;font-weight:800;cursor:pointer;box-shadow:0 10px 22px rgba(37,99,235,.22)}
+button.secondary{background:#eef4ff;color:var(--primary);box-shadow:none}.app{max-width:1240px;margin:0 auto;padding:24px}
+.hero{display:grid;grid-template-columns:1fr 300px;gap:22px;background:linear-gradient(135deg,#172554,#2563eb);color:#fff;border-radius:32px;padding:34px;box-shadow:var(--shadow)}
+.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:12px;font-weight:900;color:#bfdbfe;margin:0 0 10px}h1{font-size:clamp(32px,5vw,56px);line-height:1.04;margin:0 0 16px}.lead{font-size:18px;line-height:1.55;color:#e8f0ff;margin:0}
+.hero-card{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.14);border-radius:26px;padding:26px;display:flex;flex-direction:column;justify-content:center}.hero-number{font-size:42px;font-weight:950}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;background:rgba(255,255,255,.82);border:1px solid var(--border);border-radius:22px;margin-top:18px;padding:10px;position:sticky;top:10px;z-index:5;backdrop-filter:blur(14px)}
+.tab{background:transparent;color:var(--text);box-shadow:none;border:1px solid transparent}.tab.active{background:var(--primary);color:#fff}.tab-panel{display:none}.tab-panel.active{display:block}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:22px}.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:0 12px 35px rgba(20,33,61,.07)}
+.panel-title{display:flex;justify-content:space-between;gap:16px;margin-bottom:16px}.panel h2{margin:0 0 6px;font-size:22px}.panel p{margin:0;color:var(--muted);line-height:1.45}
+.form-grid{display:grid;gap:14px}.two{grid-template-columns:repeat(2,1fr)}label{display:flex;flex-direction:column;gap:8px;font-weight:800}.check-row label{flex-direction:row;align-items:center}.check-row input{width:auto}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.output{white-space:pre-wrap;background:#0f172a;color:#e5efff;border-radius:18px;border:1px solid #1e293b;padding:18px;min-height:520px;line-height:1.55;overflow:auto;font-family:Consolas,Menlo,monospace;font-size:14px}
+.result{border-radius:18px;background:#f8fbff;border:1px solid var(--border);padding:16px;margin-top:12px}.hint{background:#eff6ff;border:1px solid #bfdbfe;border-radius:16px;padding:14px;color:#1e3a8a;font-weight:700}.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);background:#111827;color:#fff;padding:13px 18px;border-radius:999px;font-weight:800;opacity:0;transition:.25s;z-index:50}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:900px){.app{padding:14px}.hero,.grid,.two{grid-template-columns:1fr}.hero{padding:24px;border-radius:24px}.panel-title{flex-direction:column}.tabs{position:static;overflow:auto;flex-wrap:nowrap}.tab{white-space:nowrap}}
+@media print{body{background:#fff}.hero,.tabs,.actions,.toast,button,.panel:first-child{display:none!important}.app{max-width:none;padding:0}.panel{box-shadow:none;border:1px solid #ccc;margin-bottom:12px}.grid{display:block}.output{background:#fff;color:#111;border:1px solid #ccc}}
+</style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">TanárSegéd PRO v2</p>
-        <h1>Tanári munka gyorsabban, rendezettebben</h1>
-        <p class="lead">Jegykalkulátor, dolgozatkezelés, feladatlap-generátor, óravázlat, értékelő szöveg és szülői üzenet egyetlen böngészős appban.</p>
-        <div class="hero-actions">
-          <button type="button" data-jump="grades">Jegykalkulátor</button>
-          <button type="button" class="secondary light" data-jump="worksheet">Feladatlap készítés</button>
-        </div>
-      </div>
-      <div class="hero-card">
-        <span class="hero-number" id="heroAverage">0%</span>
-        <span class="hero-label">aktuális osztályátlag</span>
-        <div class="hero-mini"><strong id="heroStudentCount">0</strong><small>diák a listában</small></div>
-      </div>
-    </header>
-
-    <nav class="tabs" aria-label="TanárSegéd menü">
-      <button class="tab active" data-tab="grades">Jegyek</button>
-      <button class="tab" data-tab="worksheet">Feladatlap</button>
-      <button class="tab" data-tab="lesson">Óravázlat</button>
-      <button class="tab" data-tab="texts">Szövegek</button>
-      <button class="tab" data-tab="tools">Tanári eszközök</button>
-    </nav>
-
-    <main>
-      <section class="tab-panel active" id="tab-grades">
-        <div class="grid">
-          <section class="panel wide">
-            <div class="panel-title">
-              <div>
-                <h2>Dolgozat adatai</h2>
-                <p>Állítsd be a dolgozatot és a maximális pontszámot.</p>
-              </div>
-              <button class="ghost" id="newWorkBtn" type="button">Új dolgozat</button>
-            </div>
-            <div class="form-grid three">
-              <label>Dolgozat neve
-                <input id="workTitle" type="text" placeholder="pl. Történelem témazáró" />
-              </label>
-              <label>Osztály
-                <input id="className" type="text" placeholder="pl. 7.B" />
-              </label>
-              <label>Max. pontszám
-                <input id="maxPoints" type="number" min="1" step="0.5" value="100" />
-              </label>
-            </div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-title compact">
-              <div>
-                <h2>Ponthatárok</h2>
-                <p>Átírható, automatikusan mentődik.</p>
-              </div>
-              <button class="ghost" id="resetScaleBtn" type="button">Alap</button>
-            </div>
-            <div class="grade-scale" id="gradeScale"></div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-title compact">
-              <div>
-                <h2>Gyors számoló</h2>
-                <p>Egy diák eredménye azonnal.</p>
-              </div>
-            </div>
-            <label>Elért pontszám
-              <input id="quickPoints" type="number" min="0" step="0.5" placeholder="pl. 73" />
-            </label>
-            <div class="result-card">
-              <span id="quickPercent">0%</span>
-              <strong id="quickGrade">Jegy: -</strong>
-              <small id="quickText">Írj be pontszámot.</small>
-            </div>
-          </section>
-
-          <section class="panel wide">
-            <div class="panel-title">
-              <div>
-                <h2>Osztálylista</h2>
-                <p>Vedd fel a diákokat, a program számolja a százalékot, jegyet és összesítést.</p>
-              </div>
-              <div class="actions">
-                <button class="secondary" id="exportCsvBtn" type="button">CSV export</button>
-                <button class="secondary" id="copySummaryBtn" type="button">Összesítés másolása</button>
-                <button class="secondary" id="printBtn" type="button">PDF / nyomtatás</button>
-                <button id="saveBtn" type="button">Mentés</button>
-              </div>
-            </div>
-
-            <form class="student-form" id="studentForm">
-              <input id="studentName" type="text" placeholder="Diák neve" required />
-              <input id="studentPoints" type="number" min="0" step="0.5" placeholder="Pont" required />
-              <button type="submit">Hozzáadás</button>
-            </form>
-
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Név</th>
-                    <th>Pont</th>
-                    <th>Százalék</th>
-                    <th>Jegy</th>
-                    <th>Értékelés</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="studentRows"></tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="panel">
-            <h2>Összesítés</h2>
-            <div class="stats" id="stats"></div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-title compact">
-              <div>
-                <h2>Mentett dolgozatok</h2>
-                <p>A böngészőben tárolva.</p>
-              </div>
-            </div>
-            <div class="saved-list" id="savedList"></div>
-          </section>
-        </div>
-      </section>
-
-      <section class="tab-panel" id="tab-worksheet">
-        <div class="grid">
-          <section class="panel">
-            <h2>Feladatlap-generátor</h2>
-            <p class="mb">Nem internetes AI, hanem gyors sablongenerátor: témából azonnal ad címet, instrukciót, kérdéseket és megoldókulcsot.</p>
-            <div class="form-grid">
-              <label>Tantárgy
-                <input id="wsSubject" type="text" placeholder="pl. történelem, matematika, magyar" />
-              </label>
-              <label>Téma
-                <input id="wsTopic" type="text" placeholder="pl. A honfoglalás, törtek, igeidők" />
-              </label>
-              <label>Évfolyam / osztály
-                <input id="wsGrade" type="text" placeholder="pl. 6. osztály" />
-              </label>
-              <div class="form-grid two">
-                <label>Kérdések száma
-                  <input id="wsCount" type="number" min="3" max="20" value="8" />
-                </label>
-                <label>Nehézség
-                  <select id="wsLevel">
-                    <option value="alap">Alap</option>
-                    <option value="közepes" selected>Közepes</option>
-                    <option value="haladó">Haladó</option>
-                  </select>
-                </label>
-              </div>
-              <div class="check-row">
-                <label><input id="wsKey" type="checkbox" checked /> Megoldókulcs is legyen</label>
-                <label><input id="wsMix" type="checkbox" checked /> Vegyes kérdéstípusok</label>
-              </div>
-              <button id="generateWorksheetBtn" type="button">Feladatlap készítése</button>
-            </div>
-          </section>
-          <section class="panel output-panel">
-            <div class="panel-title compact">
-              <div><h2>Kész feladatlap</h2><p>Másolható vagy nyomtatható.</p></div>
-              <div class="actions"><button class="secondary" data-copy="worksheetOutput" type="button">Másolás</button><button class="secondary" onclick="window.print()" type="button">Nyomtatás</button></div>
-            </div>
-            <pre id="worksheetOutput" class="output">Itt jelenik meg a feladatlap.</pre>
-          </section>
-        </div>
-      </section>
-
-      <section class="tab-panel" id="tab-lesson">
-        <div class="grid">
-          <section class="panel">
-            <h2>Óravázlat-készítő</h2>
-            <p class="mb">Gyors óraterv bevezetővel, fő résszel, gyakorlással, lezárással és házi feladattal.</p>
-            <div class="form-grid">
-              <label>Tantárgy
-                <input id="lessonSubject" type="text" placeholder="pl. biológia" />
-              </label>
-              <label>Óra témája
-                <input id="lessonTopic" type="text" placeholder="pl. emésztőrendszer" />
-              </label>
-              <div class="form-grid two">
-                <label>Időtartam percben
-                  <input id="lessonMinutes" type="number" min="15" max="120" value="45" />
-                </label>
-                <label>Osztály
-                  <input id="lessonClass" type="text" placeholder="pl. 8.A" />
-                </label>
-              </div>
-              <label>Cél / fejlesztendő készség
-                <input id="lessonGoal" type="text" placeholder="pl. lényegkiemelés, együttműködés, számolási készség" />
-              </label>
-              <button id="generateLessonBtn" type="button">Óravázlat készítése</button>
-            </div>
-          </section>
-          <section class="panel output-panel">
-            <div class="panel-title compact"><div><h2>Kész óravázlat</h2><p>Vázlatként használható, átírható.</p></div><button class="secondary" data-copy="lessonOutput" type="button">Másolás</button></div>
-            <pre id="lessonOutput" class="output">Itt jelenik meg az óravázlat.</pre>
-          </section>
-        </div>
-      </section>
-
-      <section class="tab-panel" id="tab-texts">
-        <div class="grid">
-          <section class="panel">
-            <h2>Értékelő és szülői üzenet</h2>
-            <p class="mb">Gyors, udvarias szöveg diákértékeléshez vagy szülői tájékoztatáshoz.</p>
-            <div class="form-grid">
-              <label>Diák neve
-                <input id="txtStudent" type="text" placeholder="pl. Kovács Anna" />
-              </label>
-              <label>Helyzet / téma
-                <input id="txtTopic" type="text" placeholder="pl. dolgozat eredménye, hiányzó házi, dicséret" />
-              </label>
-              <label>Részletek
-                <textarea id="txtDetails" rows="5" placeholder="pl. sokat fejlődött, de a szövegértést még gyakorolni kell"></textarea>
-              </label>
-              <div class="form-grid two">
-                <label>Szöveg típusa
-                  <select id="txtType">
-                    <option value="ertekeles">Diákértékelés</option>
-                    <option value="szulo">Szülői üzenet</option>
-                    <option value="dicseret">Dicséret</option>
-                    <option value="figyelmeztetes">Udvarias figyelmeztetés</option>
-                  </select>
-                </label>
-                <label>Hangnem
-                  <select id="txtTone">
-                    <option value="barátságos">Barátságos</option>
-                    <option value="hivatalos">Hivatalos</option>
-                    <option value="bátorító" selected>Bátorító</option>
-                  </select>
-                </label>
-              </div>
-              <button id="generateTextBtn" type="button">Szöveg készítése</button>
-            </div>
-          </section>
-          <section class="panel output-panel">
-            <div class="panel-title compact"><div><h2>Kész szöveg</h2><p>Másold e-naplóba, üzenetbe vagy értékeléshez.</p></div><button class="secondary" data-copy="textOutput" type="button">Másolás</button></div>
-            <pre id="textOutput" class="output">Itt jelenik meg a kész szöveg.</pre>
-          </section>
-        </div>
-      </section>
-
-      <section class="tab-panel" id="tab-tools">
-        <div class="grid">
-          <section class="panel">
-            <h2>Véletlen felelő / csoportbontó</h2>
-            <p class="mb">Írd be a neveket soronként, majd válassz véletlen felelőt vagy csoportokat.</p>
-            <textarea id="namesInput" rows="10" placeholder="Nagy Péter&#10;Kovács Anna&#10;Tóth Bence"></textarea>
-            <div class="form-grid two mt">
-              <label>Csoportok száma
-                <input id="groupCount" type="number" min="2" max="10" value="3" />
-              </label>
-              <label>Feladat / órai cél
-                <input id="classTask" type="text" placeholder="pl. ismétlés, projektmunka" />
-              </label>
-            </div>
-            <div class="actions mt"><button id="pickRandomBtn" type="button">Véletlen felelő</button><button class="secondary" id="makeGroupsBtn" type="button">Csoportok</button></div>
-          </section>
-          <section class="panel output-panel">
-            <div class="panel-title compact"><div><h2>Eredmény</h2><p>Másolható lista.</p></div><button class="secondary" data-copy="toolsOutput" type="button">Másolás</button></div>
-            <pre id="toolsOutput" class="output">Itt jelenik meg az eredmény.</pre>
-          </section>
-        </div>
-      </section>
-    </main>
+<div class="app">
+<header class="hero">
+  <div>
+    <p class="eyebrow">TanárSegéd PRO v6</p>
+    <h1>Tantárgyanként külön feladatlap, nem sablonos kérdések</h1>
+    <p class="lead">Matematika, történelem, fizika, kémia, biológia, földrajz, angol, irodalom, nyelvtan és informatika külön feladattípusokkal. A nehézség is tényleg változtatja a kérdéseket.</p>
   </div>
+  <div class="hero-card">
+    <span class="hero-number" id="heroSubject">Matematika</span>
+    <b id="heroLevel">Közepes szint</b>
+    <p id="heroInfo">8 kérdés • megoldókulccsal</p>
+  </div>
+</header>
 
-  <div class="toast" id="toast"></div>
-  <script src="app.js"></script>
-</body>
-</html>
+<nav class="tabs">
+  <button class="tab active" data-tab="worksheet">Feladatlap</button>
+  <button class="tab" data-tab="grades">Jegyek</button>
+  <button class="tab" data-tab="lesson">Óravázlat</button>
+  <button class="tab" data-tab="texts">Szövegek</button>
+  <button class="tab" data-tab="tools">Tanári eszközök</button>
+</nav>
+
+<main>
+<section class="tab-panel active" id="tab-worksheet">
+  <div class="grid">
+    <section class="panel">
+      <h2>Feladatlap-generátor</h2>
+      <p style="margin-bottom:16px">Válassz tantárgyat, témát és nehézséget. A program tantárgyanként eltérő kérdéstípusokat használ.</p>
+      <div class="form-grid">
+        <label>Tantárgy
+          <select id="wsSubject">
+            <option>matematika</option>
+            <option>történelem</option>
+            <option>fizika</option>
+            <option>kémia</option>
+            <option>biológia</option>
+            <option>földrajz</option>
+            <option>angol</option>
+            <option>irodalom</option>
+            <option>nyelvtan</option>
+            <option>informatika</option>
+          </select>
+        </label>
+        <label>Téma<input id="wsTopic" value="törtek" placeholder="pl. törtek, honfoglalás, energia, sejtek, igeidők"></label>
+        <label>Évfolyam / osztály<input id="wsGrade" value="8. osztály"></label>
+        <div class="form-grid two">
+          <label>Kérdések száma<input id="wsCount" type="number" min="3" max="10" value="8"></label>
+          <label>Nehézség
+            <select id="wsLevel">
+              <option value="alap">Alap</option>
+              <option value="közepes" selected>Közepes</option>
+              <option value="haladó">Haladó</option>
+            </select>
+          </label>
+        </div>
+        <div class="check-row"><label><input id="wsKey" type="checkbox" checked> Megoldókulcs is legyen</label></div>
+        <button id="generateWorksheetBtn">Feladatlap készítése</button>
+        <div class="hint" id="subjectHint">Tipp: matematika + törtek esetén konkrét törtes számolásokat ad.</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <div><h2>Kész feladatlap</h2><p id="levelExplain">Közepes szint: vegyes feladatok.</p></div>
+        <div class="actions"><button class="secondary" data-copy="worksheetOutput">Másolás</button><button class="secondary" onclick="window.print()">Nyomtatás</button></div>
+      </div>
+      <pre id="worksheetOutput" class="output">Itt jelenik meg a feladatlap.</pre>
+    </section>
+  </div>
+</section>
+
+<section class="tab-panel" id="tab-grades">
+  <div class="grid">
+    <section class="panel"><h2>Gyors jegykalkulátor</h2><div class="form-grid"><label>Max pont<input id="maxPoint" type="number" value="100"></label><label>Elért pont<input id="gotPoint" type="number" value="73"></label><button id="calcGrade">Számolás</button></div><div class="result" id="gradeResult">Eredmény itt jelenik meg.</div></section>
+    <section class="panel"><h2>Ponthatárok</h2><p>85% = 5, 70% = 4, 55% = 3, 40% = 2, alatta 1.</p></section>
+  </div>
+</section>
+
+<section class="tab-panel" id="tab-lesson">
+  <div class="grid">
+    <section class="panel"><h2>Óravázlat-készítő</h2><div class="form-grid"><label>Tantárgy<input id="lessonSubject" placeholder="pl. fizika"></label><label>Téma<input id="lessonTopic" placeholder="pl. energia"></label><label>Időtartam percben<input id="lessonMinutes" type="number" value="45"></label><button id="generateLessonBtn">Óravázlat készítése</button></div></section>
+    <section class="panel"><div class="panel-title"><h2>Kész óravázlat</h2><button class="secondary" data-copy="lessonOutput">Másolás</button></div><pre class="output" id="lessonOutput">Itt jelenik meg az óravázlat.</pre></section>
+  </div>
+</section>
+
+<section class="tab-panel" id="tab-texts">
+  <div class="grid">
+    <section class="panel"><h2>Értékelő / szülői üzenet</h2><div class="form-grid"><label>Diák neve<input id="txtStudent" placeholder="pl. Kovács Anna"></label><label>Téma<input id="txtTopic" placeholder="pl. dolgozat eredménye"></label><label>Részletek<textarea id="txtDetails" rows="5"></textarea></label><button id="generateTextBtn">Szöveg készítése</button></div></section>
+    <section class="panel"><div class="panel-title"><h2>Kész szöveg</h2><button class="secondary" data-copy="textOutput">Másolás</button></div><pre class="output" id="textOutput">Itt jelenik meg a szöveg.</pre></section>
+  </div>
+</section>
+
+<section class="tab-panel" id="tab-tools">
+  <div class="grid">
+    <section class="panel"><h2>Véletlen felelő / csoportbontó</h2><textarea id="namesInput" rows="10" placeholder="Nagy Péter&#10;Kovács Anna&#10;Tóth Bence"></textarea><div class="form-grid two" style="margin-top:14px"><label>Csoportok száma<input id="groupCount" type="number" value="3"></label><label>Feladat<input id="classTask" placeholder="pl. ismétlés"></label></div><div class="actions" style="margin-top:14px"><button id="pickRandomBtn">Véletlen felelő</button><button class="secondary" id="makeGroupsBtn">Csoportok</button></div></section>
+    <section class="panel"><div class="panel-title"><h2>Eredmény</h2><button class="secondary" data-copy="toolsOutput">Másolás</button></div><pre class="output" id="toolsOutput">Itt jelenik meg az eredmény.</pre></section>
+  </div>
+</section>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
+function norm(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function T(q,a){return{q,a}}
+function header(subject,topic,grade,level){return `FELADATLAP\nTantárgy: ${subject}\nTéma: ${topic}\nÉvfolyam/osztály: ${grade}\nNehézség: ${level}\n\nNév: ____________________   Dátum: ____________\n\n`}
+
+const bank = {
+ matematika:{
+  hint:'Matematika: számolás, műveletek, szöveges feladatok és lépéses megoldások.',
+  alap:t=>[
+   T(`Egyszerűsítsd a törteket!\n   a) 6/8 = ________\n   b) 10/15 = ________\n   c) 12/16 = ________`,'a) 3/4   b) 2/3   c) 3/4'),
+   T(`Számold ki!\n   a) 2/7 + 3/7 = ________\n   b) 6/9 - 2/9 = ________`,'a) 5/7   b) 4/9'),
+   T(`Tedd ki a megfelelő jelet!\n   a) 1/2 ___ 1/3\n   b) 3/4 ___ 2/4`,'a) >   b) >'),
+   T(`Írd át vegyes számmá!\n   a) 7/3 = ________\n   b) 9/4 = ________`,'a) 2 egész 1/3   b) 2 egész 1/4'),
+   T(`Egy csokit 8 részre törtek. Anna megevett 3 részt. Mennyi maradt?`,'5/8 maradt.'),
+   T(`Állítsd növekvő sorrendbe: 1/4, 3/4, 2/4, 4/4`,'1/4, 2/4, 3/4, 4/4'),
+   T(`Számold ki: 1/2 + 1/4 = ________`,'3/4'),
+   T(`Egy üveg 1/2 liter vizet tartalmaz. Mennyi víz van 2 ilyen üvegben?`,'1 liter.')
+  ],
+  közepes:t=>[
+   T(`Egyszerűsítsd a törteket!\n   a) 12/18 = ________\n   b) 24/36 = ________\n   c) 45/60 = ________\n   d) 56/70 = ________`,'a) 2/3   b) 2/3   c) 3/4   d) 4/5'),
+   T(`Végezd el az összeadásokat és kivonásokat!\n   a) 3/4 + 1/8 = ________\n   b) 5/6 - 1/3 = ________\n   c) 7/10 + 2/5 = ________`,'a) 7/8   b) 1/2   c) 11/10'),
+   T(`Végezd el a szorzásokat!\n   a) 2/3 × 5/7 = ________\n   b) 4/9 × 3/8 = ________`,'a) 10/21   b) 1/6'),
+   T(`Végezd el az osztásokat!\n   a) 3/5 ÷ 2/7 = ________\n   b) 4/9 ÷ 8/3 = ________`,'a) 21/10   b) 1/6'),
+   T(`Állítsd növekvő sorrendbe: 2/3, 3/4, 5/6, 1/2`,'1/2, 2/3, 3/4, 5/6'),
+   T(`Egy osztály 3/5 része lány. 30 tanuló van. Hány lány van?`,'30 × 3/5 = 18 lány.'),
+   T(`Egy pizzából Péter 3/8, Anna 2/8 részt evett meg. Mennyi maradt?`,'Megettek 5/8 részt, maradt 3/8.'),
+   T(`Számold ki: 2/3 + 5/6 - 1/4 = ________`,'5/4 = 1 egész 1/4')
+  ],
+  haladó:t=>[
+   T(`Számold ki: 5/6 + 7/9 - 1/3 = ________`,'23/18 = 1 egész 5/18'),
+   T(`Végezd el: (3/4 × 8/9) ÷ 2/3 = ________`,'1'),
+   T(`Egy recepthez 3/4 kg liszt kell. A mennyiség 2/3 részét kimérték. Mennyi hiányzik?`,'Kimértek 1/2 kg-ot, hiányzik 1/4 kg.'),
+   T(`Állítsd sorrendbe: 2/5, 3/10, 1/4. Indokold közös nevezővel!`,'1/4, 3/10, 2/5.'),
+   T(`5/6 - 1/4 + 1/3 = ________`,'11/12'),
+   T(`2 egész 1/3 + 1 egész 5/6 - 3/4 = ________`,'41/12 = 3 egész 5/12'),
+   T(`Melyik nagyobb: 7/12 + 5/18 vagy 5/6 - 1/9?`,'31/36 > 26/36, tehát az első.'),
+   T(`Egy téglalap oldalai 3/4 m és 5/6 m. Mennyi a kerülete?`,'19/6 m = 3 egész 1/6 m.')
+  ]
+ },
+ történelem:{
+  hint:'Történelem: évszám, fogalom, ok-okozat, igaz-hamis, rövid esszé.',
+  alap:t=>[
+   T(`Melyik évszázadhoz kapcsolódik a(z) ${t} témája? Írd le röviden!`,'Jó válasz: a témához illő évszázad vagy korszak megnevezése.'),
+   T(`Magyarázd meg röviden ezt a fogalmat: ${t}.`,'Jó válasz: pontos, történelmi jelentésű magyarázat.'),
+   T(`Írj két fontos szereplőt vagy csoportot a(z) ${t} témához!`,'Jó válasz: két releváns személy, nép, társadalmi csoport vagy hatalom.'),
+   T(`Igaz vagy hamis? A(z) ${t} eseményeinek voltak előzményei. Indokold!`,'Igaz. A legtöbb történelmi eseményt gazdasági, politikai vagy társadalmi előzmények készítik elő.'),
+   T(`Írj egy fontos helyszínt, amely kapcsolódik a(z) ${t} témához!`,'Jó válasz: témához illő földrajzi hely megnevezése.'),
+   T(`Írj egy okot, ami miatt a(z) ${t} fontos lehetett!`,'Jó válasz: konkrét történelmi ok.'),
+   T(`Írj egy következményt a(z) ${t} témával kapcsolatban!`,'Jó válasz: konkrét történelmi következmény.'),
+   T(`Fogalmazz meg egy kérdést, amelyet feltennél a(z) ${t} témáról!`,'Jó válasz: értelmes, témához kapcsolódó kérdés.')
+  ],
+  közepes:t=>[
+   T(`Mutasd be 4-5 mondatban a(z) ${t} legfontosabb eseményeit!`,'Jó válasz: időrend, szereplők, ok és következmény is szerepel.'),
+   T(`Készíts ok-okozati láncot a(z) ${t} témához: előzmény → esemény → következmény.`,'Jó válasz: logikus történelmi kapcsolat.'),
+   T(`Magyarázd meg 3 fogalom jelentését, amelyek kapcsolódnak a(z) ${t} témához!`,'Jó válasz: három pontos fogalommeghatározás.'),
+   T(`Igaz vagy hamis? A történelmi források segítenek ellenőrizni a(z) ${t} eseményeit. Indokold!`,'Igaz. A források bizonyítékot adhatnak és több nézőpontot mutathatnak.'),
+   T(`Helyezd időrendbe a(z) ${t} témához kapcsolódó három eseményt!`,'Jó válasz: helyes időrend vagy logikai sorrend.'),
+   T(`Miért lehetett fordulópont a(z) ${t}? Írj legalább két érvet!`,'Jó válasz: két történelmi szempont vagy következmény.'),
+   T(`Írj rövid forráselemzést: milyen kérdéseket tennél fel egy korabeli forrásnak a(z) ${t} témáról?`,'Jó válasz: ki készítette, mikor, miért, kinek, mennyire megbízható.'),
+   T(`Hasonlítsd össze a(z) ${t} előtti és utáni állapotot!`,'Jó válasz: legalább két változás megnevezése.')
+  ],
+  haladó:t=>[
+   T(`Írj 8-10 mondatos rövid esszét: miért volt jelentős a(z) ${t}?`,'Jó válasz: bevezetés, okok, események, következmények, záró megállapítás.'),
+   T(`Elemezd a(z) ${t} hosszú távú következményeit politikai és társadalmi szempontból!`,'Jó válasz: külön politikai és társadalmi következmények.'),
+   T(`Fogalmazz meg két különböző történészi nézőpontot a(z) ${t} megítéléséről!`,'Jó válasz: több nézőpont felismerése, nem egyoldalú válasz.'),
+   T(`Készíts vitakérdést: a(z) ${t} inkább kényszer vagy tudatos döntés eredménye volt? Érvelj!`,'Jó válasz: érvek és ellenérvek.'),
+   T(`Elemezz egy képzeletbeli forrást: milyen torzításai lehetnek egy korabeli beszámolónak a(z) ${t} témáról?`,'Jó válasz: szerző érdeke, nézőpontja, célközönsége, kora.'),
+   T(`Kapcsold össze a(z) ${t} témát egy másik történelmi folyamattal!`,'Jó válasz: értelmes kapcsolat két korszak vagy folyamat között.'),
+   T(`Írj három esszévázlat-pontot a(z) ${t} témához!`,'Jó válasz: okok, események, következmények vagy szereplők.'),
+   T(`Fogalmazz meg egy komplex érettségi jellegű kérdést és válaszvázlatot a(z) ${t} témáról!`,'Jó válasz: összetett kérdés és vázlatos, logikus válasz.')
+  ]
+ },
+ fizika:{
+  hint:'Fizika: fogalom, képlet, mértékegység, számítás, jelenségmagyarázat.',
+  alap:t=>[
+   T(`Magyarázd meg röviden a(z) ${t} fogalmát!`,'Jó válasz: egyszerű, pontos fizikai meghatározás.'),
+   T(`Írj egy hétköznapi példát a(z) ${t} jelenségére!`,'Jó válasz: valós, megfigyelhető példa.'),
+   T(`Milyen mértékegységek kapcsolódhatnak a(z) ${t} témához?`,'Jó válasz: témához illő SI-mértékegységek.'),
+   T(`Igaz vagy hamis? Fizikában a mérés pontossága fontos. Indokold!`,'Igaz, mert a mérési hiba befolyásolja a következtetést.'),
+   T(`Rajzolj egyszerű vázlatot egy ${t} jelenségről, és jelöld a fontos mennyiségeket!`,'Jó válasz: jelölések és alapmennyiségek szerepelnek.'),
+   T(`Írj egy megfigyelést a(z) ${t} témával kapcsolatban!`,'Jó válasz: konkrét tapasztalat vagy kísérleti megfigyelés.'),
+   T(`Nevezz meg két mennyiséget, amely fontos a(z) ${t} vizsgálatánál!`,'Jó válasz: témához illő fizikai mennyiségek.'),
+   T(`Írj egy egyszerű kérdést, amit kísérlettel ellenőriznél!`,'Jó válasz: mérhető, vizsgálható kérdés.')
+  ],
+  közepes:t=>[
+   T(`Írd fel a(z) ${t} témához kapcsolódó egyik fontos képletet, és magyarázd el a jeleket!`,'Jó válasz: helyes képlet, mennyiségek és mértékegységek.'),
+   T(`Oldj meg egy egyszerű számításos feladatot a(z) ${t} témában! Add meg az adatokat, képletet, behelyettesítést és választ.`,'Jó válasz: adat-képlet-számítás-válasz felépítés.'),
+   T(`Magyarázd el ok-okozati módon, mi történik a(z) ${t} jelenség során!`,'Jó válasz: fizikai ok és következmény.'),
+   T(`Milyen hibaforrások lehetnek egy ${t} témájú mérésnél?`,'Jó válasz: eszközpontosság, leolvasási hiba, környezeti hatás.'),
+   T(`Készíts táblázatot két mennyiséggel a(z) ${t} vizsgálatához!`,'Jó válasz: mérhető adatok rendezett táblázata.'),
+   T(`Hasonlíts össze két fizikai helyzetet a(z) ${t} témában!`,'Jó válasz: hasonlóságok és különbségek.'),
+   T(`Döntsd el, melyik állítás helyesebb, és indokold fizikai törvénnyel!`,'Jó válasz: törvényre vagy képletre hivatkozik.'),
+   T(`Írj egy kísérlettervet a(z) ${t} bemutatására!`,'Jó válasz: eszközök, lépések, várható eredmény.')
+  ],
+  haladó:t=>[
+   T(`Vezess le egy összefüggést a(z) ${t} témában, és magyarázd el minden lépését!`,'Jó válasz: logikus levezetés és egységellenőrzés.'),
+   T(`Elemezz egy összetett számításos feladatot a(z) ${t} témában!`,'Jó válasz: több lépés, helyes képletválasztás, indoklás.'),
+   T(`Vizsgáld meg, hogyan változik az eredmény, ha az egyik adat kétszeresére nő!`,'Jó válasz: arányosság felismerése.'),
+   T(`Készíts grafikonértelmezési feladatot a(z) ${t} témához!`,'Jó válasz: tengelyek, meredekség, következtetés.'),
+   T(`Magyarázz meg egy látszólag ellentmondásos jelenséget a(z) ${t} témából!`,'Jó válasz: fizikai törvényekkel magyaráz.'),
+   T(`Tervezd meg egy mérés kiértékelését hibaszámítással együtt!`,'Jó válasz: átlag, hiba, következtetés.'),
+   T(`Kapcsold össze a(z) ${t} témát energia-megmaradással vagy erőhatással!`,'Jó válasz: kapcsolódó törvény helyes alkalmazása.'),
+   T(`Írj emelt szintű gondolkodtató kérdést és válaszvázlatot a(z) ${t} témában!`,'Jó válasz: komplex, de megoldható kérdés.')
+  ]
+ },
+ kémia:{
+  hint:'Kémia: anyagok, részecskék, reakciók, képletek, egyenletek.',
+  alap:t=>[
+   T(`Magyarázd meg röviden a(z) ${t} fogalmát kémiai szempontból!`,'Jó válasz: pontos alapfogalom.'),
+   T(`Írj két példát anyagokra, amelyek kapcsolódnak a(z) ${t} témához!`,'Jó válasz: két releváns anyag.'),
+   T(`Milyen részecskék vagy részecskemodellek kapcsolódnak a(z) ${t} témához?`,'Jó válasz: atom, molekula, ion vagy elektron szerepe.'),
+   T(`Igaz vagy hamis? A kémiai reakciók során új anyag keletkezhet. Indokold!`,'Igaz. A részecskék átrendeződnek, új anyag jön létre.'),
+   T(`Írj egy hétköznapi példát a(z) ${t} témára!`,'Jó válasz: valós kémiai példa.'),
+   T(`Nevezz meg egy tulajdonságot, amely alapján egy anyag felismerhető!`,'Jó válasz: szín, szag, oldhatóság, halmazállapot, reakciókészség.'),
+   T(`Mit jelent a vegyjel vagy képlet? Magyarázd példával!`,'Jó válasz: elem vagy vegyület jelölése.'),
+   T(`Írj egy biztonsági szabályt kémiai kísérlethez!`,'Jó válasz: védőszemüveg, nem kóstolunk, óvatos melegítés stb.')
+  ],
+  közepes:t=>[
+   T(`Írj egy lehetséges reakcióegyenletet vagy képletes példát a(z) ${t} témához!`,'Jó válasz: kémiailag értelmezhető képlet vagy reakció.'),
+   T(`Magyarázd el, mi történik részecskeszinten a(z) ${t} során!`,'Jó válasz: részecskék mozgása, átrendeződése vagy kötései.'),
+   T(`Hasonlíts össze két anyagot a(z) ${t} témában tulajdonságaik alapján!`,'Jó válasz: legalább két kémiai/fizikai tulajdonság.'),
+   T(`Döntsd el, fizikai vagy kémiai változásról van-e szó egy témához illő példában! Indokold!`,'Jó válasz: új anyag keletkezik-e.'),
+   T(`Készíts táblázatot: anyag, képlet, tulajdonság, felhasználás.`,'Jó válasz: rendezett, helyes adatok.'),
+   T(`Magyarázd el a(z) ${t} környezeti vagy egészségügyi jelentőségét!`,'Jó válasz: konkrét hatás vagy veszély.'),
+   T(`Írj megfigyelést és következtetést egy ${t} témájú kísérlethez!`,'Jó válasz: megfigyelésből helyes következtetés.'),
+   T(`Miért kell kiegyenlíteni a reakcióegyenleteket?`,'Jó válasz: atommegmaradás törvénye miatt.')
+  ],
+  haladó:t=>[
+   T(`Egyensúlyozz ki egy témához illő reakcióegyenletet, és magyarázd el a lépéseket!`,'Jó válasz: atomok száma mindkét oldalon egyezik.'),
+   T(`Elemezz egy redox-, sav-bázis- vagy csapadékképződési folyamatot a(z) ${t} témában!`,'Jó válasz: folyamat típusa és résztvevők szerepe.'),
+   T(`Számolj anyagmennyiséget vagy tömeget egy egyszerű reakció alapján!`,'Jó válasz: moláris tömeg, anyagmennyiség, arányok.'),
+   T(`Magyarázd el, hogyan befolyásolja a hőmérséklet vagy koncentráció a reakciósebességet!`,'Jó válasz: ütközési gyakoriság és energia.'),
+   T(`Készíts kísérlettervet kontrollváltozókkal a(z) ${t} vizsgálatára!`,'Jó válasz: független, függő és állandó változók.'),
+   T(`Kapcsold össze a(z) ${t} témát ipari vagy környezeti problémával!`,'Jó válasz: konkrét alkalmazás vagy probléma.'),
+   T(`Magyarázd meg a kötések szerepét a(z) ${t} anyagainak tulajdonságaiban!`,'Jó válasz: ionos, kovalens vagy fémes kötés szerepe.'),
+   T(`Írj emelt szintű válaszvázlatot a(z) ${t} témához!`,'Jó válasz: fogalom, példa, folyamat, következmény.')
+  ]
+ },
+ biológia:{
+  hint:'Biológia: felépítés, működés, folyamat, alkalmazkodás, egészség.',
+  alap:t=>[
+   T(`Magyarázd meg röviden a(z) ${t} biológiai jelentését!`,'Jó válasz: pontos, életjelenséghez kapcsolódó magyarázat.'),
+   T(`Nevezz meg két részt vagy szervet, amely kapcsolódik a(z) ${t} témához!`,'Jó válasz: két releváns biológiai elem.'),
+   T(`Írj egy példát élőlényre vagy életfolyamatra a(z) ${t} témához!`,'Jó válasz: konkrét biológiai példa.'),
+   T(`Igaz vagy hamis? Az élőlények működése összefügg a környezetükkel. Indokold!`,'Igaz. A környezet hat a felépítésre és működésre.'),
+   T(`Rajzolj egyszerű vázlatot a(z) ${t} témához, és jelöld a részeket!`,'Jó válasz: alapvető részek jelölése.'),
+   T(`Írj egy egészségügyi tanácsot, amely kapcsolódhat a(z) ${t} témához!`,'Jó válasz: biológiailag indokolható tanács.'),
+   T(`Mi a különbség az élő és élettelen között? Kapcsold a témához!`,'Jó válasz: életjelenségek felsorolása.'),
+   T(`Írj egy megfigyelést a(z) ${t} témában!`,'Jó válasz: megfigyelhető jelenség.')
+  ],
+  közepes:t=>[
+   T(`Mutasd be a(z) ${t} folyamatát lépésekben!`,'Jó válasz: logikus sorrend és szakkifejezések.'),
+   T(`Magyarázd el, hogyan függ össze a felépítés és a működés a(z) ${t} témában!`,'Jó válasz: forma-funkció kapcsolat.'),
+   T(`Hasonlíts össze két élőlényt, szervet vagy folyamatot a(z) ${t} témában!`,'Jó válasz: hasonlóságok és különbségek.'),
+   T(`Készíts táblázatot: rész / feladat / jelentőség.`,'Jó válasz: pontos, rendezett összefoglalás.'),
+   T(`Mi történne, ha a(z) ${t} egyik fontos része nem működne megfelelően?`,'Jó válasz: következmény biológiai magyarázattal.'),
+   T(`Írj ok-okozati magyarázatot a(z) ${t} egyik jelenségére!`,'Jó válasz: ok, folyamat, következmény.'),
+   T(`Kapcsold össze a(z) ${t} témát az egészséges életmóddal vagy környezetvédelemmel!`,'Jó válasz: konkrét kapcsolat.'),
+   T(`Készíts 5 kérdéses rövid ismétlőt a(z) ${t} témához!`,'Jó válasz: lényeges kérdések.')
+  ],
+  haladó:t=>[
+   T(`Elemezd a(z) ${t} szabályozását vagy visszacsatolását!`,'Jó válasz: szabályozási pontok és következmények.'),
+   T(`Magyarázd el a(z) ${t} evolúciós vagy alkalmazkodási jelentőségét!`,'Jó válasz: túlélési/szaporodási előny.'),
+   T(`Értelmezz egy képzeletbeli diagramot a(z) ${t} változásáról! Milyen következtetést vonnál le?`,'Jó válasz: adatokból következtetés.'),
+   T(`Hasonlítsd össze a sejtszintű és szervezetszintű folyamatot a(z) ${t} témában!`,'Jó válasz: két szint összekapcsolása.'),
+   T(`Írj hipotézist és kísérleti tervet a(z) ${t} vizsgálatára!`,'Jó válasz: hipotézis, változók, mérés.'),
+   T(`Mutasd be a(z) ${t} szerepét egy ökológiai rendszerben!`,'Jó válasz: kapcsolatok, energiaáramlás vagy anyagkörforgás.'),
+   T(`Érvelj egy biológiai/egészségügyi döntés mellett a(z) ${t} alapján!`,'Jó válasz: tudományos indoklás.'),
+   T(`Írj emelt szintű esszévázlatot a(z) ${t} témáról!`,'Jó válasz: fogalmak, folyamat, példa, következtetés.')
+  ]
+ },
+ földrajz:{
+  hint:'Földrajz: térkép, folyamat, ok-okozat, országok, természet- és társadalomföldrajz.',
+  alap:t=>[
+   T(`Magyarázd meg röviden a(z) ${t} földrajzi jelentését!`,'Jó válasz: pontos földrajzi fogalom.'),
+   T(`Nevezz meg két helyet, területet vagy országot, amely kapcsolódhat a(z) ${t} témához!`,'Jó válasz: két releváns földrajzi név.'),
+   T(`Írj egy térképes feladatot a(z) ${t} témához!`,'Jó válasz: helymegkeresés vagy jelölés.'),
+   T(`Igaz vagy hamis? A természeti adottságok hatnak az emberek életére. Indokold!`,'Igaz. Éghajlat, domborzat, vízrajz befolyásolhatja a gazdaságot és településeket.'),
+   T(`Sorolj fel két természeti tényezőt a(z) ${t} témával kapcsolatban!`,'Jó válasz: éghajlat, domborzat, vízrajz, talaj stb.'),
+   T(`Sorolj fel két társadalmi vagy gazdasági tényezőt!`,'Jó válasz: népesség, ipar, mezőgazdaság, közlekedés.'),
+   T(`Írj egy hétköznapi példát a(z) ${t} hatására!`,'Jó válasz: valós életből vett kapcsolat.'),
+   T(`Készíts rövid fogalompárt: fogalom + magyarázat.`,'Jó válasz: helyes fogalom és magyarázat.')
+  ],
+  közepes:t=>[
+   T(`Mutasd be a(z) ${t} okait és következményeit!`,'Jó válasz: legalább két ok és két következmény.'),
+   T(`Hasonlíts össze két területet a(z) ${t} szempontjából!`,'Jó válasz: természeti és társadalmi szempontok.'),
+   T(`Értelmezz egy képzeletbeli térképet: milyen adatokat keresnél a(z) ${t} vizsgálatához?`,'Jó válasz: hely, eloszlás, sűrűség, irány.'),
+   T(`Magyarázd el, hogyan kapcsolódik a(z) ${t} a gazdasághoz!`,'Jó válasz: ipar, mezőgazdaság, turizmus, közlekedés.'),
+   T(`Készíts táblázatot: ok / folyamat / következmény.`,'Jó válasz: logikus földrajzi kapcsolatok.'),
+   T(`Írj egy környezeti problémát a(z) ${t} témával kapcsolatban!`,'Jó válasz: konkrét probléma és hatás.'),
+   T(`Milyen adatokat gyűjtenél a(z) ${t} vizsgálatához?`,'Jó válasz: mérhető földrajzi adatok.'),
+   T(`Fogalmazz meg egy következtetést a(z) ${t} területi eloszlásáról!`,'Jó válasz: térbeli mintázat felismerése.')
+  ],
+  haladó:t=>[
+   T(`Elemezd a(z) ${t} térbeli különbségeit és okait!`,'Jó válasz: területi eltérés + magyarázat.'),
+   T(`Kapcsold össze a(z) ${t} témát globalizációval vagy klímaváltozással!`,'Jó válasz: konkrét kapcsolat.'),
+   T(`Értelmezz egy képzeletbeli diagramot a(z) ${t} változásáról!`,'Jó válasz: trend, ok, következmény.'),
+   T(`Készíts problémamegoldó javaslatot egy ${t} témájú földrajzi problémára!`,'Jó válasz: reális javaslat és indoklás.'),
+   T(`Hasonlíts össze fejlett és fejlődő térséget a(z) ${t} szempontjából!`,'Jó válasz: gazdasági/társadalmi különbségek.'),
+   T(`Írj érvelést: milyen hatással lehet a(z) ${t} a lakosság életminőségére?`,'Jó válasz: több szempontú érvelés.'),
+   T(`Tervezd meg egy terepmunka vagy adatgyűjtés lépéseit a(z) ${t} vizsgálatához!`,'Jó válasz: cél, módszer, adatok, kiértékelés.'),
+   T(`Írj esszévázlatot a(z) ${t} természet- és társadalomföldrajzi kapcsolatairól!`,'Jó válasz: összetett vázlat.')
+  ]
+ },
+ angol:{
+  hint:'Angol: szókincs, nyelvtan, fordítás, mondatalkotás, rövid szöveg.',
+  alap:t=>[
+   T(`Írj 8 angol szót a(z) "${t}" témához, magyar jelentéssel!`,'Jó válasz: 8 témához illő szó és jelentés.'),
+   T(`Egészítsd ki a mondatot megfelelő szóval a(z) "${t}" témában:\n   I like ______ because it is interesting.`,'Lehetséges válasz: I like this topic because it is interesting.'),
+   T(`Fordítsd angolra: Szeretem ezt a témát.`,'I like this topic.'),
+   T(`Alkoss 3 egyszerű angol mondatot a(z) "${t}" témában!`,'Jó válasz: 3 helyes egyszerű mondat.'),
+   T(`Írj 3 kérdést angolul a(z) "${t}" témáról!`,'Jó válasz: 3 helyes kérdő mondat.'),
+   T(`Párosíts 5 angol szót magyar jelentésükkel a(z) "${t}" témában!`,'Jó válasz: 5 helyes szópár.'),
+   T(`Tedd tagadóvá: I know this topic.`,'I do not know this topic.'),
+   T(`Tedd kérdővé: You study English.`,'Do you study English?')
+  ],
+  közepes:t=>[
+   T(`Írj 6 mondatos rövid angol szöveget a(z) "${t}" témában!`,'Jó válasz: 6 érthető, nyelvtanilag többnyire helyes mondat.'),
+   T(`Alakítsd át múlt időbe: I visit my friend and we talk about ${t}.`,'I visited my friend and we talked about ...'),
+   T(`Egészítsd ki Present Simple vagy Present Continuous alakkal!`,'Jó válasz: helyes igeidő és ragozás.'),
+   T(`Fordítsd angolra: Tegnap tanultam erről a témáról.`,'I learned / studied about this topic yesterday.'),
+   T(`Írj 5 kérdést és választ a(z) "${t}" témában!`,'Jó válasz: 5 kérdés-válasz pár.'),
+   T(`Javítsd ki a hibát: He don't like this topic.`,'He does not / doesn’t like this topic.'),
+   T(`Írj rövid párbeszédet két diák között a(z) "${t}" témáról!`,'Jó válasz: párbeszéd, kérdések, válaszok.'),
+   T(`Használj 5 megadott szót egy rövid bekezdésben a(z) "${t}" témáról!`,'Jó válasz: összefüggő szöveg.')
+  ],
+  haladó:t=>[
+   T(`Írj 100-120 szavas angol fogalmazást a(z) "${t}" témában!`,'Jó válasz: bevezetés, kifejtés, lezárás, változatos szókincs.'),
+   T(`Érvelj angolul a(z) "${t}" mellett és ellen!`,'Jó válasz: pro és contra érvek.'),
+   T(`Írj hivatalos e-mailt angolul a(z) "${t}" témában!`,'Jó válasz: megszólítás, cél, udvarias zárás.'),
+   T(`Használj legalább 5 kötőszót egy összefüggő angol szövegben!`,'Jó válasz: because, although, however, therefore, moreover stb.'),
+   T(`Alakíts át 5 mondatot függő beszéddé!`,'Jó válasz: helyes reported speech.'),
+   T(`Írj véleménykifejtő bekezdést: What is your opinion about ${t}?`,'Jó válasz: vélemény + indoklás + példa.'),
+   T(`Javítsd és magyarázd meg 5 nyelvtani hibát egy témához kapcsolódó szövegben!`,'Jó válasz: hiba javítása és indoklása.'),
+   T(`Készíts szóbeli vizsga tételvázlatot angolul a(z) "${t}" témáról!`,'Jó válasz: fő pontok, kulcsszavak, példák.')
+  ]
+ },
+ irodalom:{
+  hint:'Irodalom: műelemzés, szereplők, téma, motívum, idézetértelmezés.',
+  alap:t=>[
+   T(`Nevezd meg a(z) ${t} témához kapcsolódó művet vagy szerzőt, ha ismert!`,'Jó válasz: releváns mű vagy szerző.'),
+   T(`Írd le röviden, miről szól a(z) ${t}!`,'Jó válasz: rövid tartalmi összefoglalás.'),
+   T(`Sorolj fel két szereplőt vagy fontos elemet a(z) ${t} témában!`,'Jó válasz: két releváns elem.'),
+   T(`Magyarázd meg: mi lehet a mű vagy téma fő üzenete?`,'Jó válasz: értelmezhető fő gondolat.'),
+   T(`Írj 3 jelzőt egy szereplőre vagy lírai énre!`,'Jó válasz: jellemző, indokolható jelzők.'),
+   T(`Milyen hangulatot kelt a(z) ${t}? Indokold!`,'Jó válasz: hangulat + szövegbeli ok.'),
+   T(`Keress egy motívumot a témában, és magyarázd meg!`,'Jó válasz: visszatérő kép vagy gondolat.'),
+   T(`Fogalmazz meg egy kérdést a művel kapcsolatban!`,'Jó válasz: elemző kérdés.')
+  ],
+  közepes:t=>[
+   T(`Elemezd 6-8 mondatban a(z) ${t} fő témáját!`,'Jó válasz: téma, példák, következtetés.'),
+   T(`Jellemezz egy szereplőt vagy megszólalót a(z) ${t} alapján!`,'Jó válasz: tulajdonság + bizonyíték.'),
+   T(`Hasonlíts össze két szereplőt, motívumot vagy helyzetet!`,'Jó válasz: hasonlóság és különbség.'),
+   T(`Értelmezz egy képzeletbeli idézetet a(z) ${t} témából!`,'Jó válasz: jelentés, hangulat, szerep.'),
+   T(`Milyen szerkezeti egységekre bontható a mű vagy téma?`,'Jó válasz: bevezetés, fordulópont, lezárás stb.'),
+   T(`Milyen költői vagy nyelvi eszközök kapcsolódhatnak hozzá?`,'Jó válasz: metafora, hasonlat, ismétlés, megszólítás stb.'),
+   T(`Írj rövid bekezdést a mű üzenetéről!`,'Jó válasz: állítás, indoklás, példa.'),
+   T(`Kapcsold össze a(z) ${t} témát a korral vagy szerzői háttérrel!`,'Jó válasz: irodalomtörténeti kapcsolat.')
+  ],
+  haladó:t=>[
+   T(`Írj részletes műelemzési vázlatot a(z) ${t} témához!`,'Jó válasz: bevezetés, téma, szerkezet, eszközök, értelmezés.'),
+   T(`Elemezd a motívumrendszert vagy szimbólumokat a(z) ${t} alapján!`,'Jó válasz: motívum + jelentés + példa.'),
+   T(`Hasonlítsd össze a(z) ${t} témát egy másik művel!`,'Jó válasz: párhuzamok és eltérések.'),
+   T(`Írj 10-12 mondatos érvelő elemzést a fő üzenetről!`,'Jó válasz: tételmondat, érvek, példák.'),
+   T(`Értelmezd a narrátor vagy lírai én szerepét!`,'Jó válasz: nézőpont, hangnem, hatás.'),
+   T(`Vizsgáld meg a mű társadalmi vagy erkölcsi kérdéseit!`,'Jó válasz: probléma + értelmezés.'),
+   T(`Írj esszévázlatot érettségi jelleggel a(z) ${t} témáról!`,'Jó válasz: logikus, elemző vázlat.'),
+   T(`Fogalmazz meg saját értelmezést, és támaszd alá legalább 3 érvvel!`,'Jó válasz: önálló álláspont + bizonyítékok.')
+  ]
+ },
+ nyelvtan:{
+  hint:'Nyelvtan: fogalom, mondat, szófaj, helyesírás, elemzés.',
+  alap:t=>[
+   T(`Magyarázd meg röviden a(z) ${t} nyelvtani fogalmát!`,'Jó válasz: pontos fogalommeghatározás.'),
+   T(`Írj 5 példát a(z) ${t} témára!`,'Jó válasz: 5 helyes példa.'),
+   T(`Húzd alá a mondatban a(z) ${t} témához kapcsolódó részt: A tanuló figyelmesen olvassa a szöveget.`,'Jó válasz: a témától függő megfelelő mondatrész/szó.'),
+   T(`Döntsd el, melyik alak helyes, és indokold!`,'Jó válasz: helyesírási vagy nyelvtani szabály.'),
+   T(`Írj 3 mondatot, amelyben szerepel a(z) ${t}!`,'Jó válasz: 3 szabályos mondat.'),
+   T(`Csoportosíts 6 példát két nyelvtani kategóriába!`,'Jó válasz: helyes csoportosítás.'),
+   T(`Javítsd ki a hibás mondatot: A fiúk elmentek a boltba és vesznek kenyeret.`,'Lehetséges javítás: A fiúk elmentek a boltba, és vettek kenyeret.'),
+   T(`Írj egy szabályt és egy példát a(z) ${t} témához!`,'Jó válasz: szabály + példa.')
+  ],
+  közepes:t=>[
+   T(`Elemezd nyelvtanilag a mondatot: A gyors vonat reggel elindult Budapestre.`,'Jó válasz: szófajok/mondatrészek helyes azonosítása.'),
+   T(`Alakítsd át a mondatot kérdő, tagadó és felszólító formába!`,'Jó válasz: három helyes átalakítás.'),
+   T(`Keress és javíts 5 helyesírási vagy nyelvtani hibát egy rövid szövegben!`,'Jó válasz: hibák felismerése és javítása.'),
+   T(`Magyarázd el a szabályt, amely a(z) ${t} témához kapcsolódik!`,'Jó válasz: pontos szabály és példa.'),
+   T(`Írj összetett mondatot, majd elemezd a tagmondatokat!`,'Jó válasz: tagmondatok és kötőszó felismerése.'),
+   T(`Csoportosíts szavakat szófaj szerint!`,'Jó válasz: főnév, ige, melléknév stb. helyes besorolása.'),
+   T(`Írj példát alanyra, állítmányra, tárgyra és határozóra!`,'Jó válasz: helyes mondatrészi példák.'),
+   T(`Indokold meg egy helyesírási döntésedet szabállyal!`,'Jó válasz: szabályra hivatkozó indoklás.')
+  ],
+  haladó:t=>[
+   T(`Végezz teljes mondatelemzést egy összetett mondaton!`,'Jó válasz: tagmondatok, mondatrészek, viszonyok.'),
+   T(`Elemezz egy rövid szöveget nyelvhelyességi szempontból!`,'Jó válasz: hibák, javítás, indoklás.'),
+   T(`Magyarázd el a(z) ${t} szabályát kivételekkel együtt!`,'Jó válasz: szabály + kivétel + példák.'),
+   T(`Írj 8 mondatos szöveget, majd jelöld benne a tanult nyelvtani jelenségeket!`,'Jó válasz: jelölés és magyarázat.'),
+   T(`Hasonlíts össze két nyelvtani kategóriát!`,'Jó válasz: hasonlóságok és különbségek.'),
+   T(`Készíts feladatsort megoldókulccsal a(z) ${t} témából!`,'Jó válasz: változatos, ellenőrizhető feladatok.'),
+   T(`Értelmezz egy kétértelmű mondatot nyelvtani okok alapján!`,'Jó válasz: szerkezet és jelentés kapcsolata.'),
+   T(`Írj érettségi jellegű nyelvtani elemző feladatot!`,'Jó válasz: komplex, megoldható elemzés.')
+  ]
+ },
+ informatika:{
+  hint:'Informatika: algoritmus, adat, táblázat, biztonság, programozási logika.',
+  alap:t=>[
+   T(`Magyarázd meg röviden a(z) ${t} informatikai fogalmát!`,'Jó válasz: pontos alapfogalom.'),
+   T(`Írj két példát a(z) ${t} használatára!`,'Jó válasz: két valós felhasználási példa.'),
+   T(`Mit jelent az adat és az információ? Kapcsold a témához!`,'Jó válasz: adat = nyers érték, információ = értelmezett adat.'),
+   T(`Írj 3 digitális biztonsági szabályt!`,'Jó válasz: erős jelszó, frissítés, gyanús link kerülése.'),
+   T(`Készíts egyszerű lépéssort egy feladat megoldására!`,'Jó válasz: algoritmikus sorrend.'),
+   T(`Mi a különbség fájl és mappa között?`,'Jó válasz: fájl adatot tartalmaz, mappa rendszerez.'),
+   T(`Sorolj fel 3 bemeneti vagy kimeneti eszközt!`,'Jó válasz: billentyűzet, egér, monitor, nyomtató stb.'),
+   T(`Írj egy példát táblázatkezelésre!`,'Jó válasz: adatok rendezése, számítás, diagram.')
+  ],
+  közepes:t=>[
+   T(`Írj algoritmust 5-7 lépésben a(z) ${t} témához kapcsolódó feladatra!`,'Jó válasz: pontos, végrehajtható lépések.'),
+   T(`Készíts pszeudokódot egy egyszerű döntési helyzetre!`,'Jó válasz: IF/ELSE logika.'),
+   T(`Magyarázd el, mire való a változó egy programban!`,'Jó válasz: adat tárolása és módosítása.'),
+   T(`Írj példát ciklusra a mindennapi életből és programozásból!`,'Jó válasz: ismétlődő művelet felismerése.'),
+   T(`Készíts táblázatot: adat / típus / példa.`,'Jó válasz: szöveg, szám, logikai érték stb.'),
+   T(`Milyen veszélyei lehetnek az internetes adatmegosztásnak?`,'Jó válasz: adatlopás, zaklatás, visszaélés.'),
+   T(`Írj keresési stratégiát megbízható információ megtalálásához!`,'Jó válasz: kulcsszavak, forrásellenőrzés.'),
+   T(`Magyarázd el a mentés és biztonsági másolat jelentőségét!`,'Jó válasz: adatvesztés megelőzése.')
+  ],
+  haladó:t=>[
+   T(`Tervezz algoritmust bemenettel, feldolgozással és kimenettel!`,'Jó válasz: IPO-modell.'),
+   T(`Írj pszeudokódot egy lista legnagyobb elemének megkeresésére!`,'Jó válasz: kezdeti maximum, bejárás, összehasonlítás.'),
+   T(`Elemezd egy algoritmus hatékonyságát egyszerű szavakkal!`,'Jó válasz: lépésszám, ismétlések, adatmennyiség.'),
+   T(`Készíts adatvédelmi szabályzat-vázlatot egy iskolai apphoz!`,'Jó válasz: milyen adatot, miért, meddig, ki fér hozzá.'),
+   T(`Magyarázd el a feltétel, ciklus és függvény kapcsolatát egy programban!`,'Jó válasz: alap programozási szerkezetek összefüggése.'),
+   T(`Tervezz adatbázis-táblát diákok és jegyek kezelésére!`,'Jó válasz: mezők, kulcs, kapcsolatok.'),
+   T(`Írj hibakeresési tervet egy nem működő programhoz!`,'Jó válasz: reprodukció, napló, teszt, javítás.'),
+   T(`Érvelj az AI iskolai használata mellett és ellen informatikai szempontból!`,'Jó válasz: előnyök, kockázatok, felelős használat.')
+  ]
+ }
+};
+
+function generic(subject){
+ return bank[subject] || bank.történelem;
+}
+
+function generateWorksheet(){
+ const subject=$('wsSubject').value;
+ const topic=$('wsTopic').value.trim() || 'megadott téma';
+ const grade=$('wsGrade').value.trim() || 'osztály';
+ const level=$('wsLevel').value;
+ const count=clamp(Number($('wsCount').value)||8,3,10);
+ const showKey=$('wsKey').checked;
+ const subjectBank=generic(subject);
+ const tasks=subjectBank[level](topic).slice(0,count);
+ let out=header(subject,topic,grade,level);
+ out += subject==='angol'
+  ? 'Instrukció: Válaszaidat angolul írd, ahol a feladat ezt kéri.\n\n'
+  : 'Instrukció: Válaszaid legyenek konkrétak. Számolásnál írd le a lépéseket, szöveges feladatnál indokolj.\n\n';
+ tasks.forEach((t,i)=>out += `${i+1}. ${t.q}\n   Válasz: ____________________________________________________________\n\n`);
+ if(showKey){
+   out += 'MEGOLDÓKULCS / JAVÍTÁSI JAVASLAT\n';
+   tasks.forEach((t,i)=>out += `${i+1}. ${t.a}\n`);
+ }
+ $('worksheetOutput').textContent=out;
+ $('heroSubject').textContent=subject.charAt(0).toUpperCase()+subject.slice(1);
+ $('heroLevel').textContent=level.charAt(0).toUpperCase()+level.slice(1)+' szint';
+ $('heroInfo').textContent=`${count} kérdés • megoldókulcs: ${showKey?'bekapcsolva':'kikapcsolva'}`;
+ $('subjectHint').textContent=subjectBank.hint;
+ const msg={alap:'Alap szint: könnyebb, rávezető kérdések.',közepes:'Közepes szint: vegyes feladatok és magyarázat.',haladó:'Haladó szint: összetettebb, elemző és gondolkodtató feladatok.'}[level];
+ $('levelExplain').textContent=msg;
+ toast(`${subject} • ${level} frissítve`);
+}
+
+async function copyText(t){try{await navigator.clipboard.writeText(t);toast('Vágólapra másolva.')}catch{toast('Nem sikerült másolni.')}}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===b.dataset.tab));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.toggle('active',x.id==='tab-'+b.dataset.tab))});
+document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyText($(b.dataset.copy).textContent));
+['wsSubject','wsTopic','wsGrade','wsCount','wsLevel','wsKey'].forEach(id=>$(id).addEventListener('change',generateWorksheet));
+$('generateWorksheetBtn').onclick=generateWorksheet;
+$('wsSubject').addEventListener('change',()=>{
+ const subject=$('wsSubject').value;
+ const defaultTopics={matematika:'törtek',történelem:'honfoglalás',fizika:'energia',kémia:'kémiai reakciók',biológia:'sejtek',földrajz:'éghajlat',angol:'daily routine',irodalom:'János vitéz',nyelvtan:'szófajok',informatika:'algoritmusok'};
+ $('wsTopic').value=defaultTopics[subject]||'téma';
+ generateWorksheet();
+});
+
+$('calcGrade').onclick=()=>{const max=Number($('maxPoint').value)||1,got=Number($('gotPoint').value)||0,p=got/max*100;let g=p>=85?5:p>=70?4:p>=55?3:p>=40?2:1;$('gradeResult').textContent=`${p.toFixed(1)}% • Jegy: ${g}`};
+$('generateLessonBtn').onclick=()=>{const s=$('lessonSubject').value||'tantárgy',t=$('lessonTopic').value||'óra témája',m=Number($('lessonMinutes').value)||45;$('lessonOutput').textContent=`ÓRAVÁZLAT\nTantárgy: ${s}\nTéma: ${t}\nIdőtartam: ${m} perc\n\n1. Ráhangolódás – 5 perc\n2. Új anyag / közös példa – 15 perc\n3. Önálló vagy páros gyakorlás – 20 perc\n4. Ellenőrzés, lezárás – 5 perc\n\nHázi feladat: 3 gyakorlófeladat a(z) ${t} témából.`};
+$('generateTextBtn').onclick=()=>{const n=$('txtStudent').value||'A tanuló',t=$('txtTopic').value||'az aktuális téma',d=$('txtDetails').value||'Az alapok megvannak, de rendszeres gyakorlással tovább javítható az eredmény.';$('textOutput').textContent=`${n} a(z) ${t} témában a következő visszajelzést kapja:\n\n${d}\n\nJavaslat: rövid, rendszeres ismétlés és célzott gyakorlófeladatok.`};
+function names(){return $('namesInput').value.split(/\n|,/).map(x=>x.trim()).filter(Boolean)}
+$('pickRandomBtn').onclick=()=>{const n=names();$('toolsOutput').textContent=n.length?`Véletlen felelő: ${n[Math.floor(Math.random()*n.length)]}`:'Adj meg neveket.'};
+$('makeGroupsBtn').onclick=()=>{const n=names().sort(()=>Math.random()-.5),c=clamp(Number($('groupCount').value)||3,2,10),g=Array.from({length:c},()=>[]);n.forEach((x,i)=>g[i%c].push(x));$('toolsOutput').textContent=g.map((a,i)=>`${i+1}. csoport: ${a.join(', ')}`).join('\n')};
+generateWorksheet();
+</script>
+</body></html>
