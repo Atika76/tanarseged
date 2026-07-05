@@ -1,9 +1,0 @@
-{
-  "name":"TanárSegéd PRO",
-  "short_name":"TanárSegéd",
-  "start_url":"./index.html",
-  "display":"standalone",
-  "background_color":"#f4f7fb",
-  "theme_color":"#2563eb",
-  "icons":[]
-}
