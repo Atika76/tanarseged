@@ -1,14 +1,17 @@
-TanárSegéd PRO v6 – régi kinézet visszaállítva
+TanárSegéd PRO v7 – Feladatlap helyett Házi feladat kezelő
 
-Ebben a verzióban:
-- A kinézet vissza lett állítva a korábbi elrendezésre.
-- A fülek sorrendje: Jegyek / Feladatlap / Óravázlat / Szövegek / Tanári eszközök.
-- A feladatlap-generátor több tantárgyat kezel.
-- A Megoldókulcs pipa működik.
-- A nehézségi szint változtatja a kérdéseket.
+Változások:
+- A Feladatlap menüpont kikerült.
+- Helyette Házi feladatok menüpont került be.
+- Régi kinézet megtartva.
+- Funkciók:
+  - gyors jegykalkulátor
+  - házi feladat mentés/listázás/másolás/törlés
+  - óravázlat készítő
+  - értékelő és szülői üzenetek
+  - véletlen felelő és csoportbontó
 
-Fájlok:
-- index.html
-- styles.css
-- app.js
-- OLVASS_EL.txt
+Használat:
+1. Csomagold ki a zip-et.
+2. Nyisd meg az index.html fájlt.
+3. Minden adat a böngészőben mentődik, nincs szükség internetre.

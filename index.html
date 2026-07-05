@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>TanárSegéd PRO v6</title>
-  <meta name="description" content="TanárSegéd PRO v6 – régi kinézet, javított tantárgyankénti feladatlap-generátor.">
+  <title>TanárSegéd PRO v7</title>
+  <meta name="description" content="TanárSegéd PRO – jegyek, házi feladatok, óravázlat, szülői üzenetek és tanári eszközök.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="app-shell">
   <header class="hero">
     <div>
-      <p class="eyebrow">TanárSegéd PRO v6</p>
-      <h1>Tanári segéd, ami már valódi feladatokat ad</h1>
+      <p class="eyebrow">TanárSegéd PRO v7</p>
+      <h1>Tanári segéd, ami a napi munkában segít</h1>
       <p class="lead">
-        Jegykalkulátor, dolgozatkezelés, korrekt feladatlapok megoldókulccsal,
-        óravázlat, értékelő szöveg, véletlen felelő és csoportbontó egy helyen.
+        Jegykalkulátor, házi feladat kezelő, óravázlat, értékelő szöveg,
+        véletlen felelő és csoportbontó egy helyen.
       </p>
     </div>
     <div class="hero-card">
@@ -26,96 +26,74 @@
   </header>
 
   <nav class="tabs">
-    <button class="tab" data-tab="grades">Jegyek</button>
-    <button class="tab active" data-tab="worksheet">Feladatlap</button>
+    <button class="tab active" data-tab="grades">Jegyek</button>
+    <button class="tab" data-tab="homework">Házi feladatok</button>
     <button class="tab" data-tab="lesson">Óravázlat</button>
     <button class="tab" data-tab="texts">Szövegek</button>
     <button class="tab" data-tab="tools">Tanári eszközök</button>
   </nav>
 
   <main>
-    <section class="tab-panel" id="tab-grades">
+    <section class="tab-panel active" id="tab-grades">
       <div class="grid">
         <section class="panel">
           <h2>Gyors jegykalkulátor</h2>
+          <p class="mb">Pontszámból százalékot és jegyet számol.</p>
           <div class="form-grid">
-            <label>Max pont<input id="maxPoint" type="number" value="100"></label>
-            <label>Elért pont<input id="gotPoint" type="number" value="73"></label>
+            <label>Max pont<input id="maxPoint" type="number" value="100" min="1"></label>
+            <label>Elért pont<input id="gotPoint" type="number" value="73" min="0"></label>
             <button id="calcGrade">Számolás</button>
           </div>
           <div class="result" id="gradeResult">Eredmény itt jelenik meg.</div>
         </section>
+
         <section class="panel">
           <h2>Ponthatárok</h2>
           <p>85% = 5, 70% = 4, 55% = 3, 40% = 2, alatta 1.</p>
+          <div class="result">
+            <strong>Gyors használat:</strong><br>
+            Írd be a dolgozat maximális pontszámát és a diák pontját, majd kattints a Számolás gombra.
+          </div>
         </section>
       </div>
     </section>
 
-    <section class="tab-panel active" id="tab-worksheet">
+    <section class="tab-panel" id="tab-homework">
       <div class="grid">
         <section class="panel">
-          <h2>Feladatlap-generátor</h2>
-          <p class="mb">A régi kinézet maradt, de a feladatlap-generátor tantárgyanként okosabb lett.</p>
+          <h2>Házi feladat kezelő</h2>
+          <p class="mb">Feladható házik mentése, listázása és másolható üzenet készítése.</p>
 
           <div class="form-grid">
-            <label>Tantárgy
-              <select id="wsSubject">
-                <option>matematika</option>
-                <option>történelem</option>
-                <option>fizika</option>
-                <option>kémia</option>
-                <option>biológia</option>
-                <option>földrajz</option>
-                <option>angol</option>
-                <option>irodalom</option>
-                <option>nyelvtan</option>
-                <option>informatika</option>
-              </select>
-            </label>
-
-            <label>Téma
-              <input id="wsTopic" value="törtek" placeholder="pl. törtek, honfoglalás, energia, sejtek, igeidők">
-            </label>
-
-            <label>Évfolyam / osztály
-              <input id="wsGrade" value="8. osztály">
-            </label>
-
-            <div class="form-grid two">
-              <label>Kérdések száma
-                <input id="wsCount" type="number" min="3" max="10" value="8">
-              </label>
-              <label>Nehézség
-                <select id="wsLevel">
-                  <option value="alap">alap</option>
-                  <option value="közepes" selected>közepes</option>
-                  <option value="haladó">haladó</option>
-                </select>
-              </label>
-            </div>
-
-            <div class="check-row">
-              <label><input id="wsKey" type="checkbox" checked> Megoldókulcs is legyen</label>
-            </div>
-
-            <button id="generateWorksheetBtn">Feladatlap készítése</button>
-            <div class="hint" id="subjectHint">Matematika: számolás, műveletek, szöveges feladatok és lépéses megoldások.</div>
+            <label>Osztály<input id="hwClass" placeholder="pl. 7.B"></label>
+            <label>Tantárgy<input id="hwSubject" placeholder="pl. matematika"></label>
+            <label>Határidő<input id="hwDeadline" type="date"></label>
+            <label>Házi feladat<textarea id="hwText" rows="6" placeholder="pl. Tankönyv 45. oldal 3-6. feladat, füzetbe megoldva."></textarea></label>
+            <label>Megjegyzés<textarea id="hwNote" rows="3" placeholder="pl. Aki hiányzott, annak is pótolni kell."></textarea></label>
+            <button id="saveHomeworkBtn">Házi mentése</button>
           </div>
         </section>
 
         <section class="panel">
           <div class="panel-title">
             <div>
-              <h2>Kész feladatlap</h2>
-              <p id="levelExplain">Közepes szint: vegyes feladatok és magyarázat.</p>
+              <h2>Mentett házik</h2>
+              <p>A böngészőben tárolva, internet nélkül is működik.</p>
             </div>
-            <div class="actions">
-              <button class="secondary" data-copy="worksheetOutput">Másolás</button>
-              <button class="secondary" onclick="window.print()">Nyomtatás</button>
-            </div>
+            <button class="secondary" id="clearHomeworksBtn">Lista ürítése</button>
           </div>
-          <pre id="worksheetOutput" class="output">Itt jelenik meg a feladatlap.</pre>
+          <div class="saved-list" id="homeworkList"></div>
+        </section>
+
+        <section class="panel wide">
+          <div class="panel-title">
+            <div>
+              <h2>Másolható üzenet</h2>
+              <p>Ezt beteheted e-naplóba, Messengerbe vagy Facebook csoportba.</p>
+            </div>
+            <button class="secondary" data-copy="homeworkMessage">Másolás</button>
+          </div>
+          <pre class="output small-output" id="homeworkMessage">Itt jelenik meg a házi feladat üzenete.</pre>
         </section>
       </div>
     </section>
@@ -124,13 +102,17 @@
       <div class="grid">
         <section class="panel">
           <h2>Óravázlat-készítő</h2>
+          <p class="mb">Egyszerű, másolható óravázlat gyorsan.</p>
           <div class="form-grid">
-            <label>Tantárgy<input id="lessonSubject" placeholder="pl. fizika"></label>
-            <label>Téma<input id="lessonTopic" placeholder="pl. energia"></label>
+            <label>Tantárgy<input id="lessonSubject" placeholder="pl. biológia"></label>
+            <label>Óra témája<input id="lessonTopic" placeholder="pl. emésztőrendszer"></label>
+            <label>Osztály<input id="lessonClass" placeholder="pl. 8.A"></label>
             <label>Időtartam percben<input id="lessonMinutes" type="number" value="45"></label>
+            <label>Óra célja<input id="lessonGoal" placeholder="pl. alapfogalmak megértése és gyakorlása"></label>
             <button id="generateLessonBtn">Óravázlat készítése</button>
           </div>
         </section>
+
         <section class="panel">
           <div class="panel-title">
             <h2>Kész óravázlat</h2>
@@ -145,19 +127,30 @@
       <div class="grid">
         <section class="panel">
           <h2>Értékelő / szülői üzenet</h2>
+          <p class="mb">Udvarias, másolható szöveg készítése.</p>
           <div class="form-grid">
             <label>Diák neve<input id="txtStudent" placeholder="pl. Kovács Anna"></label>
             <label>Téma<input id="txtTopic" placeholder="pl. dolgozat eredménye"></label>
-            <label>Részletek<textarea id="txtDetails" rows="5"></textarea></label>
+            <label>Szöveg típusa
+              <select id="txtType">
+                <option value="ertekeles">Diákértékelés</option>
+                <option value="szulo">Szülői üzenet</option>
+                <option value="dicseret">Dicséret</option>
+                <option value="figyelmeztetes">Udvarias figyelmeztetés</option>
+                <option value="hianyzo_hazi">Hiányzó házi feladat</option>
+              </select>
+            </label>
+            <label>Részletek<textarea id="txtDetails" rows="6" placeholder="pl. sokat fejlődött, de a gyakorlásra még szükség van"></textarea></label>
             <button id="generateTextBtn">Szöveg készítése</button>
           </div>
         </section>
+
         <section class="panel">
           <div class="panel-title">
             <h2>Kész szöveg</h2>
             <button class="secondary" data-copy="textOutput">Másolás</button>
           </div>
-          <pre class="output" id="textOutput">Itt jelenik meg a szöveg.</pre>
+          <pre class="output" id="textOutput">Itt jelenik meg a kész szöveg.</pre>
         </section>
       </div>
     </section>
@@ -166,9 +159,10 @@
       <div class="grid">
         <section class="panel">
           <h2>Véletlen felelő / csoportbontó</h2>
+          <p class="mb">Nevek soronként, majd sorsolás vagy csoportkészítés.</p>
           <textarea id="namesInput" rows="10" placeholder="Nagy Péter&#10;Kovács Anna&#10;Tóth Bence"></textarea>
           <div class="form-grid two mt">
-            <label>Csoportok száma<input id="groupCount" type="number" value="3"></label>
+            <label>Csoportok száma<input id="groupCount" type="number" min="2" max="10" value="3"></label>
             <label>Feladat<input id="classTask" placeholder="pl. ismétlés"></label>
           </div>
           <div class="actions mt">
@@ -176,6 +170,7 @@
             <button class="secondary" id="makeGroupsBtn">Csoportok</button>
           </div>
         </section>
+
         <section class="panel">
           <div class="panel-title">
             <h2>Eredmény</h2>
