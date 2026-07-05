@@ -1,18 +1,36 @@
-TanárSegéd PRO v8 – eredeti Jegyek kinézet + Házi feladatok
+TanárSegéd PRO v9 – TISZTA CSOMAG
 
-Ez a verzió a feltöltött régi v2 kinézetre épül.
+FONTOS:
+Ez egy tiszta csomag. Nincs benne:
+- advanced.html
+- manifest.webmanifest
+- sw.js
+- régi feladatlapos fájl
+- kevert v1/v7/v8 verziófelirat
 
-Változások:
-- A Jegyek oldal vissza lett állítva a korábbi, részletes kinézetre:
-  Dolgozat adatai, Ponthatárok, Gyors számoló, Osztálylista,
-  Összesítés, Mentett dolgozatok.
-- A Feladatlap menüpont kikerült.
-- Helyette Házi feladatok menüpont került be.
-- A Házi feladatok működése:
-  mentés, listázás, megnyitás, törlés, másolható üzenet.
+Csak ezek a fájlok kellenek:
+- index.html
+- styles.css
+- app.js
+- README.md
+- OLVASS_EL.txt
 
-Használat:
-1. Csomagold ki a zip-et.
-2. Nyisd meg az index.html fájlt.
-3. GitHub Pages esetén mindhárom fájl legyen egy mappában:
-   index.html, styles.css, app.js
+Fő változás:
+- Alapból a részletes Jegyek oldal nyílik meg.
+- A Feladatlap menüpont ki lett véve.
+- Helyette Házi feladatok menüpont van.
+- Mindenhol v9 szerepel.
+
+GitHubra feltöltés:
+1. A régi repo fájljait töröld, főleg:
+   advanced.html
+   manifest.webmanifest
+   sw.js
+   régi app.js
+   régi index.html
+   régi styles.css
+2. Utána töltsd fel ennek a zipnek a tartalmát.
+3. GitHub Pages:
+   Settings → Pages → Deploy from branch → main → /root
+4. Ha a böngésző régi verziót mutat:
+   Ctrl + F5

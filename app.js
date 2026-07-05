@@ -1,5 +1,5 @@
-const STORAGE_KEY = 'tanarseged_pro_v8';
-const HOMEWORK_KEY = 'tanarseged_pro_v8_homeworks';
+const STORAGE_KEY = 'tanarseged_pro_v9_clean';
+const HOMEWORK_KEY = 'tanarseged_pro_v9_homeworks';
 
 const defaultScale = [
   { grade: 5, min: 85 },
@@ -29,16 +29,15 @@ function toast(text){
   setTimeout(()=>el.classList.remove('show'), 2000);
 }
 
+function escapeHtml(text){
+  return String(text).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+}
+
 function load(){
   try{
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if(data){
-      state = {
-        ...state,
-        ...data,
-        scale: data.scale || structuredClone(defaultScale),
-        saved: data.saved || []
-      };
+      state = {...state, ...data, scale: data.scale || structuredClone(defaultScale), saved: data.saved || []};
     }
   }catch{}
 }
@@ -61,10 +60,6 @@ function verbal(p){
   if(p >= 60) return 'megfelelő teljesítmény, pár gyakorlással javítható rész';
   if(p >= 40) return 'az alapok megvannak, de gyakorlás szükséges';
   return 'jelentős ismétlés és gyakorlás javasolt';
-}
-
-function escapeHtml(text){
-  return String(text).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
 }
 
 function renderScale(){
@@ -144,10 +139,10 @@ function renderStats(){
   $('stats').innerHTML = `
     <div class="stat"><span>Diákok</span><strong>${s.count}</strong></div>
     <div class="stat"><span>Átlag</span><strong>${s.avg.toFixed(1)}%</strong></div>
-    <div class="stat"><span>Sikeresség</span><strong>${s.pass.toFixed(0)}%</strong></div>
     <div class="stat"><span>Legjobb</span><strong>${escapeHtml(s.best)}</strong></div>
     <div class="stat"><span>Leggyengébb</span><strong>${escapeHtml(s.worst)}</strong></div>
-    <div class="stat"><span>Jegyek</span><strong>5:${s.grades[5]} 4:${s.grades[4]} 3:${s.grades[3]} 2:${s.grades[2]} 1:${s.grades[1]}</strong></div>
+    <div class="stat"><span>Jegyek</span><strong>5:${s.grades[5]} 4:${s.grades[4]} 3:${s.grades[3]}</strong></div>
+    <div class="stat"><span>Alsó jegyek</span><strong>2:${s.grades[2]} 1:${s.grades[1]}</strong></div>
   `;
 }
 
@@ -317,7 +312,6 @@ function renderHomeworks(){
   $('homeworkMessage').textContent = buildHomeworkMessage(list[list.length-1]);
 }
 
-/* Óravázlat, szöveg, eszközök */
 function generateLesson(){
   const subject = $('lessonSubject').value.trim() || 'tantárgy';
   const topic = $('lessonTopic').value.trim() || 'óra témája';
@@ -379,18 +373,11 @@ function makeGroups(){
   $('toolsOutput').textContent = groups.map((g,i)=>`${i+1}. csoport: ${g.join(', ')}`).join('\n') + `\n\nFeladat: ${$('classTask').value || '-'}`;
 }
 
-/* Eventek */
+/* Események */
 document.querySelectorAll('.tab').forEach(button=>{
   button.addEventListener('click', ()=>{
     document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab === button.dataset.tab));
     document.querySelectorAll('.tab-panel').forEach(panel=>panel.classList.toggle('active', panel.id === 'tab-' + button.dataset.tab));
-  });
-});
-
-document.querySelectorAll('[data-jump]').forEach(button=>{
-  button.addEventListener('click', ()=>{
-    const tab = button.dataset.jump === 'homework' ? 'homework' : 'grades';
-    document.querySelector(`.tab[data-tab="${tab}"]`)?.click();
   });
 });
 

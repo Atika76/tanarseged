@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TanárSegéd PRO</title>
-  <meta name="description" content="TanárSegéd PRO – jegykalkulátor, házi feladatok, óravázlat, értékelő szöveg, szülői üzenet és tanári admin segéd egy helyen." />
-  <meta property="og:title" content="TanárSegéd PRO" />
-  <meta property="og:description" content="Jegyek, dolgozatok, házi feladatok, óravázlatok és szülői üzenetek gyorsan, tanároknak." />
+  <title>TanárSegéd PRO v9</title>
+  <meta name="description" content="TanárSegéd PRO v9 – jegyek, pontok, dolgozatok, házi feladatok, óravázlat, szövegek és tanári eszközök." />
+  <meta property="og:title" content="TanárSegéd PRO v9" />
+  <meta property="og:description" content="Jegyek, dolgozatok, házi feladatok, óravázlatok és tanári eszközök egy böngészős appban." />
   <meta name="theme-color" content="#2563eb" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -14,18 +14,20 @@
   <div class="app-shell">
     <header class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">TanárSegéd PRO v8</p>
-        <h1>Tanári munka gyorsabban, rendezettebben</h1>
-        <p class="lead">Jegykalkulátor, dolgozatkezelés, házi feladatok, óravázlat, értékelő szöveg és szülői üzenet egyetlen böngészős appban.</p>
-        <div class="hero-actions">
-          <button type="button" data-jump="grades">Jegykalkulátor</button>
-          <button type="button" class="secondary light" data-jump="homework">Házi feladatok</button>
-        </div>
+        <p class="eyebrow">TanárSegéd PRO v9</p>
+        <h1>Jegyek, pontok és dolgozatok egyszerűen</h1>
+        <p class="lead">
+          Számolj jegyet pontszámból, ments osztálylistát, nézd meg az átlagot,
+          kezeld a házi feladatokat, majd exportáld vagy nyomtasd az összesítést.
+        </p>
       </div>
       <div class="hero-card">
-        <span class="hero-number" id="heroAverage">0%</span>
+        <span class="hero-number" id="heroAverage">0.0%</span>
         <span class="hero-label">aktuális osztályátlag</span>
-        <div class="hero-mini"><strong id="heroStudentCount">0</strong><small>diák a listában</small></div>
+        <div class="hero-mini">
+          <strong id="heroStudentCount">0</strong>
+          <small>diák a listában</small>
+        </div>
       </div>
     </header>
 
@@ -48,6 +50,7 @@
               </div>
               <button class="ghost" id="newWorkBtn" type="button">Új dolgozat</button>
             </div>
+
             <div class="form-grid three">
               <label>Dolgozat neve
                 <input id="workTitle" type="text" placeholder="pl. Történelem témazáró" />
@@ -159,7 +162,7 @@
                 <input id="hwDeadline" type="date" />
               </label>
               <label>Házi feladat
-                <textarea id="hwText" rows="6" placeholder="pl. Tankönyv 45. oldal 3-6. feladat, füzetbe megoldva."></textarea>
+                <textarea id="hwText" rows="6" placeholder="pl. Tankönyv 45. oldal 3–6. feladat, füzetbe megoldva."></textarea>
               </label>
               <label>Megjegyzés
                 <textarea id="hwNote" rows="3" placeholder="pl. Aki hiányzott, annak is pótolni kell."></textarea>
@@ -181,7 +184,10 @@
 
           <section class="panel wide output-panel">
             <div class="panel-title compact">
-              <div><h2>Másolható üzenet</h2><p>E-naplóba, Messengerbe vagy csoportba másolható.</p></div>
+              <div>
+                <h2>Másolható üzenet</h2>
+                <p>E-naplóba, Messengerbe vagy csoportba másolható.</p>
+              </div>
               <button class="secondary" data-copy="homeworkMessage" type="button">Másolás</button>
             </div>
             <pre id="homeworkMessage" class="output small-output">Itt jelenik meg a házi feladat üzenete.</pre>
@@ -215,8 +221,15 @@
               <button id="generateLessonBtn" type="button">Óravázlat készítése</button>
             </div>
           </section>
+
           <section class="panel output-panel">
-            <div class="panel-title compact"><div><h2>Kész óravázlat</h2><p>Vázlatként használható, átírható.</p></div><button class="secondary" data-copy="lessonOutput" type="button">Másolás</button></div>
+            <div class="panel-title compact">
+              <div>
+                <h2>Kész óravázlat</h2>
+                <p>Vázlatként használható, átírható.</p>
+              </div>
+              <button class="secondary" data-copy="lessonOutput" type="button">Másolás</button>
+            </div>
             <pre id="lessonOutput" class="output">Itt jelenik meg az óravázlat.</pre>
           </section>
         </div>
@@ -258,8 +271,15 @@
               <button id="generateTextBtn" type="button">Szöveg készítése</button>
             </div>
           </section>
+
           <section class="panel output-panel">
-            <div class="panel-title compact"><div><h2>Kész szöveg</h2><p>Másold e-naplóba, üzenetbe vagy értékeléshez.</p></div><button class="secondary" data-copy="textOutput" type="button">Másolás</button></div>
+            <div class="panel-title compact">
+              <div>
+                <h2>Kész szöveg</h2>
+                <p>Másold e-naplóba, üzenetbe vagy értékeléshez.</p>
+              </div>
+              <button class="secondary" data-copy="textOutput" type="button">Másolás</button>
+            </div>
             <pre id="textOutput" class="output">Itt jelenik meg a kész szöveg.</pre>
           </section>
         </div>
@@ -279,10 +299,20 @@
                 <input id="classTask" type="text" placeholder="pl. ismétlés, projektmunka" />
               </label>
             </div>
-            <div class="actions mt"><button id="pickRandomBtn" type="button">Véletlen felelő</button><button class="secondary" id="makeGroupsBtn" type="button">Csoportok</button></div>
+            <div class="actions mt">
+              <button id="pickRandomBtn" type="button">Véletlen felelő</button>
+              <button class="secondary" id="makeGroupsBtn" type="button">Csoportok</button>
+            </div>
           </section>
+
           <section class="panel output-panel">
-            <div class="panel-title compact"><div><h2>Eredmény</h2><p>Másolható lista.</p></div><button class="secondary" data-copy="toolsOutput" type="button">Másolás</button></div>
+            <div class="panel-title compact">
+              <div>
+                <h2>Eredmény</h2>
+                <p>Másolható lista.</p>
+              </div>
+              <button class="secondary" data-copy="toolsOutput" type="button">Másolás</button>
+            </div>
             <pre id="toolsOutput" class="output">Itt jelenik meg az eredmény.</pre>
           </section>
         </div>
