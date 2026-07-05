@@ -1,36 +1,28 @@
-TanárSegéd PRO v9 – TISZTA CSOMAG
+TanárSegéd PRO v10 – MOBIL JAVÍTVA
 
-FONTOS:
-Ez egy tiszta csomag. Nincs benne:
-- advanced.html
-- manifest.webmanifest
-- sw.js
-- régi feladatlapos fájl
-- kevert v1/v7/v8 verziófelirat
+Ez a v9 tiszta csomag javított mobilos verziója.
 
-Csak ezek a fájlok kellenek:
-- index.html
-- styles.css
-- app.js
-- README.md
-- OLVASS_EL.txt
-
-Fő változás:
-- Alapból a részletes Jegyek oldal nyílik meg.
-- A Feladatlap menüpont ki lett véve.
-- Helyette Házi feladatok menüpont van.
-- Mindenhol v9 szerepel.
+Javítások:
+- telefonon nem csúszik szét a fejléc,
+- a menüsor vízszintesen görgethető, nem töri szét az oldalt,
+- a kártyák egy oszlopba rendeződnek,
+- a gombok mobilon teljes szélességűek,
+- a táblázat saját dobozán belül görgethető oldalirányban,
+- mindenhol v10 verziószám szerepel,
+- nincs advanced.html, sw.js, manifest.webmanifest.
 
 GitHubra feltöltés:
-1. A régi repo fájljait töröld, főleg:
+1. Töröld a régi fájlokat a repóból:
    advanced.html
    manifest.webmanifest
    sw.js
-   régi app.js
    régi index.html
    régi styles.css
-2. Utána töltsd fel ennek a zipnek a tartalmát.
-3. GitHub Pages:
-   Settings → Pages → Deploy from branch → main → /root
-4. Ha a böngésző régi verziót mutat:
-   Ctrl + F5
+   régi app.js
+2. Töltsd fel ennek a mappának a fájljait:
+   index.html
+   styles.css
+   app.js
+   README.md
+   OLVASS_EL.txt
+3. Telefonon nyisd meg inkognitóban vagy töröld az oldal gyorsítótárát.

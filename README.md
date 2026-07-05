@@ -1,3 +1,3 @@
-# TanárSegéd PRO v9
+# TanárSegéd PRO v10
 
-Tiszta verzió: részletes Jegyek oldal + Házi feladatok, Óravázlat, Szövegek, Tanári eszközök.
+Mobilnézet javítva. Tiszta csomag: index.html, styles.css, app.js.
