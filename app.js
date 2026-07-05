@@ -1,5 +1,5 @@
-const STORAGE_KEY = 'tanarseged_pro_v10_clean';
-const HOMEWORK_KEY = 'tanarseged_pro_v10_homeworks';
+const STORAGE_KEY = 'tanarseged_pro_v11_clean';
+const HOMEWORK_KEY = 'tanarseged_pro_v11_homeworks';
 
 const defaultScale = [
   { grade: 5, min: 85 },
@@ -255,7 +255,6 @@ function exportCsv(){
   URL.revokeObjectURL(a.href);
 }
 
-/* Házi feladat */
 function getHomeworks(){
   try{return JSON.parse(localStorage.getItem(HOMEWORK_KEY)) || []}catch{return []}
 }
@@ -373,7 +372,6 @@ function makeGroups(){
   $('toolsOutput').textContent = groups.map((g,i)=>`${i+1}. csoport: ${g.join(', ')}`).join('\n') + `\n\nFeladat: ${$('classTask').value || '-'}`;
 }
 
-/* Események */
 document.querySelectorAll('.tab').forEach(button=>{
   button.addEventListener('click', ()=>{
     document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab === button.dataset.tab));

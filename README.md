@@ -1,3 +1,3 @@
-# TanárSegéd PRO v10
+# TanárSegéd PRO v11
 
-Mobilnézet javítva. Tiszta csomag: index.html, styles.css, app.js.
+Mobilnézet és régi cache/service worker javítva.

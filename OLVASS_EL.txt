@@ -1,28 +1,29 @@
-TanárSegéd PRO v10 – MOBIL JAVÍTVA
+TanárSegéd PRO v11 – MOBIL + CACHE JAVÍTÁS
 
-Ez a v9 tiszta csomag javított mobilos verziója.
+Mi javult:
+- telefonon és Messenger böngészőben nem lóghat ki az oldal a kijelzőből,
+- a gombok nem nyújtják szét az oldalt,
+- a táblázat külön dobozon belül görgethető oldalirányban,
+- minden konténer max-width:100% védelmet kapott,
+- régi service worker/cache törlés került az index.html-be,
+- CSS/JS cache-busting: styles.css?v=11 és app.js?v=11.
 
-Javítások:
-- telefonon nem csúszik szét a fejléc,
-- a menüsor vízszintesen görgethető, nem töri szét az oldalt,
-- a kártyák egy oszlopba rendeződnek,
-- a gombok mobilon teljes szélességűek,
-- a táblázat saját dobozán belül görgethető oldalirányban,
-- mindenhol v10 verziószám szerepel,
-- nincs advanced.html, sw.js, manifest.webmanifest.
-
-GitHubra feltöltés:
-1. Töröld a régi fájlokat a repóból:
+Nagyon fontos GitHub feltöltés:
+1. A repóban töröld ezeket:
    advanced.html
    manifest.webmanifest
    sw.js
-   régi index.html
-   régi styles.css
-   régi app.js
-2. Töltsd fel ennek a mappának a fájljait:
+   minden régi index.html / styles.css / app.js
+2. Utána töltsd fel ezt az 5 fájlt:
    index.html
    styles.css
    app.js
    README.md
    OLVASS_EL.txt
-3. Telefonon nyisd meg inkognitóban vagy töröld az oldal gyorsítótárát.
+3. Telefonon első teszthez:
+   - inkognitó / privát ablak, vagy
+   - Messenger helyett Chrome-ban nyisd meg, vagy
+   - tegyél a link végére: ?v=11
+
+Példa:
+https://atika76.github.io/tanarseged/?v=11

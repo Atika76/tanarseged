@@ -2,24 +2,35 @@
 <html lang="hu">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TanárSegéd PRO v10</title>
-  <meta name="description" content="TanárSegéd PRO v10 – jegyek, pontok, dolgozatok, házi feladatok, óravázlat, szövegek és tanári eszközök." />
-  <meta property="og:title" content="TanárSegéd PRO v10" />
-  <meta property="og:description" content="Jegyek, dolgozatok, házi feladatok, óravázlatok és tanári eszközök egy böngészős appban." />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>TanárSegéd PRO v11</title>
+  <meta name="description" content="TanárSegéd PRO v11 – jegyek, pontok, dolgozatok, házi feladatok, óravázlat, szövegek és tanári eszközök." />
   <meta name="theme-color" content="#2563eb" />
-  <link rel="stylesheet" href="styles.css" />
+  <script>
+    // Régi GitHub Pages / PWA cache és service worker törlése.
+    // Ez azért kell, mert régi sw.js miatt először a v1/v7 verzió töltődhet be.
+    (async function clearOldAppCache(){
+      try {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+        }
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+      } catch(e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css?v=11" />
 </head>
 <body>
   <div class="app-shell">
     <header class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">TanárSegéd PRO v10</p>
+        <p class="eyebrow">TanárSegéd PRO v11</p>
         <h1>Jegyek, pontok és dolgozatok egyszerűen</h1>
-        <p class="lead">
-          Számolj jegyet pontszámból, ments osztálylistát, nézd meg az átlagot,
-          kezeld a házi feladatokat, majd exportáld vagy nyomtasd az összesítést.
-        </p>
+        <p class="lead">Számolj jegyet pontszámból, ments osztálylistát, nézd meg az átlagot, kezeld a házi feladatokat.</p>
       </div>
       <div class="hero-card">
         <span class="hero-number" id="heroAverage">0.0%</span>
@@ -50,7 +61,6 @@
               </div>
               <button class="ghost" id="newWorkBtn" type="button">Új dolgozat</button>
             </div>
-
             <div class="form-grid three">
               <label>Dolgozat neve
                 <input id="workTitle" type="text" placeholder="pl. Történelem témazáró" />
@@ -162,7 +172,7 @@
                 <input id="hwDeadline" type="date" />
               </label>
               <label>Házi feladat
-                <textarea id="hwText" rows="6" placeholder="pl. Tankönyv 45. oldal 3–6. feladat, füzetbe megoldva."></textarea>
+                <textarea id="hwText" rows="5" placeholder="pl. Tankönyv 45. oldal 3–6. feladat."></textarea>
               </label>
               <label>Megjegyzés
                 <textarea id="hwNote" rows="3" placeholder="pl. Aki hiányzott, annak is pótolni kell."></textarea>
@@ -199,7 +209,7 @@
         <div class="grid">
           <section class="panel">
             <h2>Óravázlat-készítő</h2>
-            <p class="mb">Gyors óraterv bevezetővel, fő résszel, gyakorlással, lezárással és házi feladattal.</p>
+            <p class="mb">Gyors óraterv bevezetővel, fő résszel, gyakorlással és lezárással.</p>
             <div class="form-grid">
               <label>Tantárgy
                 <input id="lessonSubject" type="text" placeholder="pl. biológia" />
@@ -215,13 +225,12 @@
                   <input id="lessonClass" type="text" placeholder="pl. 8.A" />
                 </label>
               </div>
-              <label>Cél / fejlesztendő készség
-                <input id="lessonGoal" type="text" placeholder="pl. lényegkiemelés, együttműködés, számolási készség" />
+              <label>Cél / készség
+                <input id="lessonGoal" type="text" placeholder="pl. lényegkiemelés" />
               </label>
               <button id="generateLessonBtn" type="button">Óravázlat készítése</button>
             </div>
           </section>
-
           <section class="panel output-panel">
             <div class="panel-title compact">
               <div>
@@ -245,10 +254,10 @@
                 <input id="txtStudent" type="text" placeholder="pl. Kovács Anna" />
               </label>
               <label>Helyzet / téma
-                <input id="txtTopic" type="text" placeholder="pl. dolgozat eredménye, hiányzó házi, dicséret" />
+                <input id="txtTopic" type="text" placeholder="pl. dolgozat eredménye" />
               </label>
               <label>Részletek
-                <textarea id="txtDetails" rows="5" placeholder="pl. sokat fejlődött, de a szövegértést még gyakorolni kell"></textarea>
+                <textarea id="txtDetails" rows="5" placeholder="pl. sokat fejlődött, de gyakorlás kell"></textarea>
               </label>
               <div class="form-grid two">
                 <label>Szöveg típusa
@@ -256,7 +265,7 @@
                     <option value="ertekeles">Diákértékelés</option>
                     <option value="szulo">Szülői üzenet</option>
                     <option value="dicseret">Dicséret</option>
-                    <option value="figyelmeztetes">Udvarias figyelmeztetés</option>
+                    <option value="figyelmeztetes">Figyelmeztetés</option>
                     <option value="hianyzo_hazi">Hiányzó házi</option>
                   </select>
                 </label>
@@ -271,12 +280,11 @@
               <button id="generateTextBtn" type="button">Szöveg készítése</button>
             </div>
           </section>
-
           <section class="panel output-panel">
             <div class="panel-title compact">
               <div>
                 <h2>Kész szöveg</h2>
-                <p>Másold e-naplóba, üzenetbe vagy értékeléshez.</p>
+                <p>Másold e-naplóba vagy üzenetbe.</p>
               </div>
               <button class="secondary" data-copy="textOutput" type="button">Másolás</button>
             </div>
@@ -289,14 +297,14 @@
         <div class="grid">
           <section class="panel">
             <h2>Véletlen felelő / csoportbontó</h2>
-            <p class="mb">Írd be a neveket soronként, majd válassz véletlen felelőt vagy csoportokat.</p>
-            <textarea id="namesInput" rows="10" placeholder="Nagy Péter&#10;Kovács Anna&#10;Tóth Bence"></textarea>
+            <p class="mb">Írd be a neveket soronként, majd válassz felelőt vagy csoportokat.</p>
+            <textarea id="namesInput" rows="8" placeholder="Nagy Péter&#10;Kovács Anna&#10;Tóth Bence"></textarea>
             <div class="form-grid two mt">
               <label>Csoportok száma
                 <input id="groupCount" type="number" min="2" max="10" value="3" />
               </label>
-              <label>Feladat / órai cél
-                <input id="classTask" type="text" placeholder="pl. ismétlés, projektmunka" />
+              <label>Feladat / cél
+                <input id="classTask" type="text" placeholder="pl. ismétlés" />
               </label>
             </div>
             <div class="actions mt">
@@ -304,7 +312,6 @@
               <button class="secondary" id="makeGroupsBtn" type="button">Csoportok</button>
             </div>
           </section>
-
           <section class="panel output-panel">
             <div class="panel-title compact">
               <div>
@@ -321,6 +328,6 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <script src="app.js"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>
