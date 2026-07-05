@@ -1,16 +1,14 @@
-TanárSegéd PRO v6 – külön fájlos verzió
+TanárSegéd PRO v6 – régi kinézet visszaállítva
+
+Ebben a verzióban:
+- A kinézet vissza lett állítva a korábbi elrendezésre.
+- A fülek sorrendje: Jegyek / Feladatlap / Óravázlat / Szövegek / Tanári eszközök.
+- A feladatlap-generátor több tantárgyat kezel.
+- A Megoldókulcs pipa működik.
+- A nehézségi szint változtatja a kérdéseket.
 
 Fájlok:
-- index.html: az alkalmazás oldala
-- styles.css: a kinézet
-- app.js: a működés és feladatlap-generátor
-- OLVASS_EL.txt: rövid útmutató
-
-Használat:
-1. Csomagold ki a zip-et.
-2. Nyisd meg az index.html fájlt.
-3. A Feladatlap fülön válassz tantárgyat, témát és nehézséget.
-
-Fontos:
-Ha GitHub Pages-re teszed, mindhárom fájl legyen ugyanabban a mappában:
-index.html, styles.css, app.js
+- index.html
+- styles.css
+- app.js
+- OLVASS_EL.txt

@@ -1,163 +1,194 @@
 <!doctype html>
 <html lang="hu">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TanárSegéd PRO v6</title>
-<meta name="description" content="TanárSegéd PRO v6 – tantárgyanként külön feladatlap-generátor valódi kérdésekkel.">
-<link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TanárSegéd PRO v6</title>
+  <meta name="description" content="TanárSegéd PRO v6 – régi kinézet, javított tantárgyankénti feladatlap-generátor.">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="app">
-<header class="hero">
-  <div>
-    <p class="eyebrow">TanárSegéd PRO v6</p>
-    <h1>Tantárgyanként külön feladatlap, nem sablonos kérdések</h1>
-    <p class="lead">Matematika, történelem, fizika, kémia, biológia, földrajz, angol, irodalom, nyelvtan és informatika külön feladattípusokkal. A nehézség is tényleg változtatja a kérdéseket.</p>
-  </div>
-  <div class="hero-card">
-    <span class="hero-number" id="heroSubject">Matematika</span>
-    <b id="heroLevel">Közepes szint</b>
-    <p id="heroInfo">8 kérdés • megoldókulccsal</p>
-  </div>
-</header>
+<div class="app-shell">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">TanárSegéd PRO v6</p>
+      <h1>Tanári segéd, ami már valódi feladatokat ad</h1>
+      <p class="lead">
+        Jegykalkulátor, dolgozatkezelés, korrekt feladatlapok megoldókulccsal,
+        óravázlat, értékelő szöveg, véletlen felelő és csoportbontó egy helyen.
+      </p>
+    </div>
+    <div class="hero-card">
+      <span class="hero-number" id="heroMain">0.0%</span>
+      <span class="hero-label" id="heroSub">aktuális osztályátlag</span>
+      <small id="heroSmall">0 diák a listában</small>
+    </div>
+  </header>
 
-<nav class="tabs">
-  <button class="tab active" data-tab="worksheet">Feladatlap</button>
-  <button class="tab" data-tab="grades">Jegyek</button>
-  <button class="tab" data-tab="lesson">Óravázlat</button>
-  <button class="tab" data-tab="texts">Szövegek</button>
-  <button class="tab" data-tab="tools">Tanári eszközök</button>
-</nav>
+  <nav class="tabs">
+    <button class="tab" data-tab="grades">Jegyek</button>
+    <button class="tab active" data-tab="worksheet">Feladatlap</button>
+    <button class="tab" data-tab="lesson">Óravázlat</button>
+    <button class="tab" data-tab="texts">Szövegek</button>
+    <button class="tab" data-tab="tools">Tanári eszközök</button>
+  </nav>
 
-<main>
-<section class="tab-panel active" id="tab-worksheet">
-  <div class="grid">
-    <section class="panel">
-      <h2>Feladatlap-generátor</h2>
-      <p style="margin-bottom:16px">Válassz tantárgyat, témát és nehézséget. A program tantárgyanként eltérő kérdéstípusokat használ.</p>
-      <div class="form-grid">
-        <label>Tantárgy
-          <select id="wsSubject">
-            <option>matematika</option>
-            <option>történelem</option>
-            <option>fizika</option>
-            <option>kémia</option>
-            <option>biológia</option>
-            <option>földrajz</option>
-            <option>angol</option>
-            <option>irodalom</option>
-            <option>nyelvtan</option>
-            <option>informatika</option>
-          </select>
-        </label>
-        <label>Téma<input id="wsTopic" value="törtek" placeholder="pl. törtek, honfoglalás, energia, sejtek, igeidők"></label>
-        <label>Évfolyam / osztály<input id="wsGrade" value="8. osztály"></label>
-        <div class="form-grid two">
-          <label>Kérdések száma<input id="wsCount" type="number" min="3" max="10" value="8"></label>
-          <label>Nehézség
-            <select id="wsLevel">
-              <option value="alap">Alap</option>
-              <option value="közepes" selected>Közepes</option>
-              <option value="haladó">Haladó</option>
-            </select>
-          </label>
-        </div>
-        <div class="check-row"><label><input id="wsKey" type="checkbox" checked> Megoldókulcs is legyen</label></div>
-        <button id="generateWorksheetBtn">Feladatlap készítése</button>
-        <div class="hint" id="subjectHint">Tipp: matematika + törtek esetén konkrét törtes számolásokat ad.</div>
+  <main>
+    <section class="tab-panel" id="tab-grades">
+      <div class="grid">
+        <section class="panel">
+          <h2>Gyors jegykalkulátor</h2>
+          <div class="form-grid">
+            <label>Max pont<input id="maxPoint" type="number" value="100"></label>
+            <label>Elért pont<input id="gotPoint" type="number" value="73"></label>
+            <button id="calcGrade">Számolás</button>
+          </div>
+          <div class="result" id="gradeResult">Eredmény itt jelenik meg.</div>
+        </section>
+        <section class="panel">
+          <h2>Ponthatárok</h2>
+          <p>85% = 5, 70% = 4, 55% = 3, 40% = 2, alatta 1.</p>
+        </section>
       </div>
     </section>
 
-    <section class="panel">
-      <div class="panel-title">
-        <div><h2>Kész feladatlap</h2><p id="levelExplain">Közepes szint: vegyes feladatok.</p></div>
-        <div class="actions"><button class="secondary" data-copy="worksheetOutput">Másolás</button><button class="secondary" onclick="window.print()">Nyomtatás</button></div>
+    <section class="tab-panel active" id="tab-worksheet">
+      <div class="grid">
+        <section class="panel">
+          <h2>Feladatlap-generátor</h2>
+          <p class="mb">A régi kinézet maradt, de a feladatlap-generátor tantárgyanként okosabb lett.</p>
+
+          <div class="form-grid">
+            <label>Tantárgy
+              <select id="wsSubject">
+                <option>matematika</option>
+                <option>történelem</option>
+                <option>fizika</option>
+                <option>kémia</option>
+                <option>biológia</option>
+                <option>földrajz</option>
+                <option>angol</option>
+                <option>irodalom</option>
+                <option>nyelvtan</option>
+                <option>informatika</option>
+              </select>
+            </label>
+
+            <label>Téma
+              <input id="wsTopic" value="törtek" placeholder="pl. törtek, honfoglalás, energia, sejtek, igeidők">
+            </label>
+
+            <label>Évfolyam / osztály
+              <input id="wsGrade" value="8. osztály">
+            </label>
+
+            <div class="form-grid two">
+              <label>Kérdések száma
+                <input id="wsCount" type="number" min="3" max="10" value="8">
+              </label>
+              <label>Nehézség
+                <select id="wsLevel">
+                  <option value="alap">alap</option>
+                  <option value="közepes" selected>közepes</option>
+                  <option value="haladó">haladó</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="check-row">
+              <label><input id="wsKey" type="checkbox" checked> Megoldókulcs is legyen</label>
+            </div>
+
+            <button id="generateWorksheetBtn">Feladatlap készítése</button>
+            <div class="hint" id="subjectHint">Matematika: számolás, műveletek, szöveges feladatok és lépéses megoldások.</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <div>
+              <h2>Kész feladatlap</h2>
+              <p id="levelExplain">Közepes szint: vegyes feladatok és magyarázat.</p>
+            </div>
+            <div class="actions">
+              <button class="secondary" data-copy="worksheetOutput">Másolás</button>
+              <button class="secondary" onclick="window.print()">Nyomtatás</button>
+            </div>
+          </div>
+          <pre id="worksheetOutput" class="output">Itt jelenik meg a feladatlap.</pre>
+        </section>
       </div>
-      <pre id="worksheetOutput" class="output">Itt jelenik meg a feladatlap.</pre>
     </section>
-  </div>
-</section>
 
-<section class="tab-panel" id="tab-grades">
-  <div class="grid">
-    <section class="panel"><h2>Gyors jegykalkulátor</h2><div class="form-grid"><label>Max pont<input id="maxPoint" type="number" value="100"></label><label>Elért pont<input id="gotPoint" type="number" value="73"></label><button id="calcGrade">Számolás</button></div><div class="result" id="gradeResult">Eredmény itt jelenik meg.</div></section>
-    <section class="panel"><h2>Ponthatárok</h2><p>85% = 5, 70% = 4, 55% = 3, 40% = 2, alatta 1.</p></section>
-  </div>
-</section>
+    <section class="tab-panel" id="tab-lesson">
+      <div class="grid">
+        <section class="panel">
+          <h2>Óravázlat-készítő</h2>
+          <div class="form-grid">
+            <label>Tantárgy<input id="lessonSubject" placeholder="pl. fizika"></label>
+            <label>Téma<input id="lessonTopic" placeholder="pl. energia"></label>
+            <label>Időtartam percben<input id="lessonMinutes" type="number" value="45"></label>
+            <button id="generateLessonBtn">Óravázlat készítése</button>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Kész óravázlat</h2>
+            <button class="secondary" data-copy="lessonOutput">Másolás</button>
+          </div>
+          <pre class="output" id="lessonOutput">Itt jelenik meg az óravázlat.</pre>
+        </section>
+      </div>
+    </section>
 
-<section class="tab-panel" id="tab-lesson">
-  <div class="grid">
-    <section class="panel"><h2>Óravázlat-készítő</h2><div class="form-grid"><label>Tantárgy<input id="lessonSubject" placeholder="pl. fizika"></label><label>Téma<input id="lessonTopic" placeholder="pl. energia"></label><label>Időtartam percben<input id="lessonMinutes" type="number" value="45"></label><button id="generateLessonBtn">Óravázlat készítése</button></div></section>
-    <section class="panel"><div class="panel-title"><h2>Kész óravázlat</h2><button class="secondary" data-copy="lessonOutput">Másolás</button></div><pre class="output" id="lessonOutput">Itt jelenik meg az óravázlat.</pre></section>
-  </div>
-</section>
+    <section class="tab-panel" id="tab-texts">
+      <div class="grid">
+        <section class="panel">
+          <h2>Értékelő / szülői üzenet</h2>
+          <div class="form-grid">
+            <label>Diák neve<input id="txtStudent" placeholder="pl. Kovács Anna"></label>
+            <label>Téma<input id="txtTopic" placeholder="pl. dolgozat eredménye"></label>
+            <label>Részletek<textarea id="txtDetails" rows="5"></textarea></label>
+            <button id="generateTextBtn">Szöveg készítése</button>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Kész szöveg</h2>
+            <button class="secondary" data-copy="textOutput">Másolás</button>
+          </div>
+          <pre class="output" id="textOutput">Itt jelenik meg a szöveg.</pre>
+        </section>
+      </div>
+    </section>
 
-<section class="tab-panel" id="tab-texts">
-  <div class="grid">
-    <section class="panel"><h2>Értékelő / szülői üzenet</h2><div class="form-grid"><label>Diák neve<input id="txtStudent" placeholder="pl. Kovács Anna"></label><label>Téma<input id="txtTopic" placeholder="pl. dolgozat eredménye"></label><label>Részletek<textarea id="txtDetails" rows="5"></textarea></label><button id="generateTextBtn">Szöveg készítése</button></div></section>
-    <section class="panel"><div class="panel-title"><h2>Kész szöveg</h2><button class="secondary" data-copy="textOutput">Másolás</button></div><pre class="output" id="textOutput">Itt jelenik meg a szöveg.</pre></section>
-  </div>
-</section>
-
-<section class="tab-panel" id="tab-tools">
-  <div class="grid">
-    <section class="panel"><h2>Véletlen felelő / csoportbontó</h2><textarea id="namesInput" rows="10" placeholder="Nagy Péter&#10;Kovács Anna&#10;Tóth Bence"></textarea><div class="form-grid two" style="margin-top:14px"><label>Csoportok száma<input id="groupCount" type="number" value="3"></label><label>Feladat<input id="classTask" placeholder="pl. ismétlés"></label></div><div class="actions" style="margin-top:14px"><button id="pickRandomBtn">Véletlen felelő</button><button class="secondary" id="makeGroupsBtn">Csoportok</button></div></section>
-    <section class="panel"><div class="panel-title"><h2>Eredmény</h2><button class="secondary" data-copy="toolsOutput">Másolás</button></div><pre class="output" id="toolsOutput">Itt jelenik meg az eredmény.</pre></section>
-  </div>
-</section>
-</main>
+    <section class="tab-panel" id="tab-tools">
+      <div class="grid">
+        <section class="panel">
+          <h2>Véletlen felelő / csoportbontó</h2>
+          <textarea id="namesInput" rows="10" placeholder="Nagy Péter&#10;Kovács Anna&#10;Tóth Bence"></textarea>
+          <div class="form-grid two mt">
+            <label>Csoportok száma<input id="groupCount" type="number" value="3"></label>
+            <label>Feladat<input id="classTask" placeholder="pl. ismétlés"></label>
+          </div>
+          <div class="actions mt">
+            <button id="pickRandomBtn">Véletlen felelő</button>
+            <button class="secondary" id="makeGroupsBtn">Csoportok</button>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Eredmény</h2>
+            <button class="secondary" data-copy="toolsOutput">Másolás</button>
+          </div>
+          <pre class="output" id="toolsOutput">Itt jelenik meg az eredmény.</pre>
+        </section>
+      </div>
+    </section>
+  </main>
 </div>
+
 <div class="toast" id="toast"></div>
-
-<script>
-const $=id=>document.getElementById(id);
-const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
-function norm(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
-function T(q,a){return{q,a}}
-function header(subject,topic,grade,level){return `FELADATLAP\nTantárgy: ${subject}\nTéma: ${topic}\nÉvfolyam/osztály: ${grade}\nNehézség: ${level}\n\nNév: ____________________   Dátum: ____________\n\n`}
-
-const bank = {
- matematika:{
-  hint:'Matematika: számolás, műveletek, szöveges feladatok és lépéses megoldások.',
-  alap:t=>[
-   T(`Egyszerűsítsd a törteket!\n   a) 6/8 = ________\n   b) 10/15 = ________\n   c) 12/16 = ________`,'a) 3/4   b) 2/3   c) 3/4'),
-   T(`Számold ki!\n   a) 2/7 + 3/7 = ________\n   b) 6/9 - 2/9 = ________`,'a) 5/7   b) 4/9'),
-   T(`Tedd ki a megfelelő jelet!\n   a) 1/2 ___ 1/3\n   b) 3/4 ___ 2/4`,'a) >   b) >'),
-   T(`Írd át vegyes számmá!\n   a) 7/3 = ________\n   b) 9/4 = ________`,'a) 2 egész 1/3   b) 2 egész 1/4'),
-   T(`Egy csokit 8 részre törtek. Anna megevett 3 részt. Mennyi maradt?`,'5/8 maradt.'),
-   T(`Állítsd növekvő sorrendbe: 1/4, 3/4, 2/4, 4/4`,'1/4, 2/4, 3/4, 4/4'),
-   T(`Számold ki: 1/2 + 1/4 = ________`,'3/4'),
-   T(`Egy üveg 1/2 liter vizet tartalmaz. Mennyi víz van 2 ilyen üvegben?`,'1 liter.')
-  ],
-  közepes:t=>[
-   T(`Egyszerűsítsd a törteket!\n   a) 12/18 = ________\n   b) 24/36 = ________\n   c) 45/60 = ________\n   d) 56/70 = ________`,'a) 2/3   b) 2/3   c) 3/4   d) 4/5'),
-   T(`Végezd el az összeadásokat és kivonásokat!\n   a) 3/4 + 1/8 = ________\n   b) 5/6 - 1/3 = ________\n   c) 7/10 + 2/5 = ________`,'a) 7/8   b) 1/2   c) 11/10'),
-   T(`Végezd el a szorzásokat!\n   a) 2/3 × 5/7 = ________\n   b) 4/9 × 3/8 = ________`,'a) 10/21   b) 1/6'),
-   T(`Végezd el az osztásokat!\n   a) 3/5 ÷ 2/7 = ________\n   b) 4/9 ÷ 8/3 = ________`,'a) 21/10   b) 1/6'),
-   T(`Állítsd növekvő sorrendbe: 2/3, 3/4, 5/6, 1/2`,'1/2, 2/3, 3/4, 5/6'),
-   T(`Egy osztály 3/5 része lány. 30 tanuló van. Hány lány van?`,'30 × 3/5 = 18 lány.'),
-   T(`Egy pizzából Péter 3/8, Anna 2/8 részt evett meg. Mennyi maradt?`,'Megettek 5/8 részt, maradt 3/8.'),
-   T(`Számold ki: 2/3 + 5/6 - 1/4 = ________`,'5/4 = 1 egész 1/4')
-  ],
-  haladó:t=>[
-   T(`Számold ki: 5/6 + 7/9 - 1/3 = ________`,'23/18 = 1 egész 5/18'),
-   T(`Végezd el: (3/4 × 8/9) ÷ 2/3 = ________`,'1'),
-   T(`Egy recepthez 3/4 kg liszt kell. A mennyiség 2/3 részét kimérték. Mennyi hiányzik?`,'Kimértek 1/2 kg-ot, hiányzik 1/4 kg.'),
-   T(`Állítsd sorrendbe: 2/5, 3/10, 1/4. Indokold közös nevezővel!`,'1/4, 3/10, 2/5.'),
-   T(`5/6 - 1/4 + 1/3 = ________`,'11/12'),
-   T(`2 egész 1/3 + 1 egész 5/6 - 3/4 = ________`,'41/12 = 3 egész 5/12'),
-   T(`Melyik nagyobb: 7/12 + 5/18 vagy 5/6 - 1/9?`,'31/36 > 26/36, tehát az első.'),
-   T(`Egy téglalap oldalai 3/4 m és 5/6 m. Mennyi a kerülete?`,'19/6 m = 3 egész 1/6 m.')
-  ]
- },
- történelem:{
-  hint:'Történelem: évszám, fogalom, ok-okozat, igaz-hamis, rövid esszé.',
-  alap:t=>[
-   T(`Melyik évszázadhoz kapcsolódik a(z) ${t} témája? Írd le röviden!`,'Jó válasz: a témához illő évszázad vagy korszak megnevezése.'),
-   T(`Magyarázd meg röviden ezt a fogalmat: ${t}.`,'Jó válasz: pontos, történelmi jelentésű magyarázat.'),
-   T(`Írj két fontos szereplőt vagy csoportot a(z) ${t} témához!`,'Jó válasz: két releváns személy, nép, társadalmi csoport vagy hatalom.'),
-   T(`Igaz vagy hamis? A(z) ${t} eseményeinek voltak előzményei. Indokold!`,'Igaz. A legtöbb történelmi eseményt gazdasági, politikai vagy társadalmi előzmények készítik elő.'),
-   T(`Írj egy fontos helyszínt, amely kapcsolódik a(z) ${t} témához!`,'Jó válasz: témához illő földrajzi hely megnevezése.'),
-   T(`Írj egy okot, ami miatt a(<script src="app.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
