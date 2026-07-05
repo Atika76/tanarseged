@@ -1,29 +1,22 @@
-TanárSegéd PRO v11 – MOBIL + CACHE JAVÍTÁS
+TanárSegéd PRO v12 – ikon hozzáadva
 
-Mi javult:
-- telefonon és Messenger böngészőben nem lóghat ki az oldal a kijelzőből,
-- a gombok nem nyújtják szét az oldalt,
-- a táblázat külön dobozon belül görgethető oldalirányban,
-- minden konténer max-width:100% védelmet kapott,
-- régi service worker/cache törlés került az index.html-be,
-- CSS/JS cache-busting: styles.css?v=11 és app.js?v=11.
+Változás:
+- A böngészőfülön a földgömb helyett TanárSegéd ikon jelenik meg.
+- Új fájl: favicon.svg
+- Az index.html tartalmazza:
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=12" />
 
-Nagyon fontos GitHub feltöltés:
-1. A repóban töröld ezeket:
-   advanced.html
-   manifest.webmanifest
-   sw.js
-   minden régi index.html / styles.css / app.js
-2. Utána töltsd fel ezt az 5 fájlt:
+Feltöltés GitHubra:
+1. Töltsd fel ezeket:
    index.html
    styles.css
    app.js
+   favicon.svg
    README.md
    OLVASS_EL.txt
-3. Telefonon első teszthez:
-   - inkognitó / privát ablak, vagy
-   - Messenger helyett Chrome-ban nyisd meg, vagy
-   - tegyél a link végére: ?v=11
 
-Példa:
-https://atika76.github.io/tanarseged/?v=11
+2. Ha a régi földgömb marad:
+   - Ctrl + F5
+   - vagy nyisd meg így:
+     https://atika76.github.io/tanarseged/?v=12
+   - telefonon/Messengerben lehet, hogy kell pár perc vagy inkognitó/Chrome.

@@ -1,5 +1,5 @@
-const STORAGE_KEY = 'tanarseged_pro_v11_clean';
-const HOMEWORK_KEY = 'tanarseged_pro_v11_homeworks';
+const STORAGE_KEY = 'tanarseged_pro_v12_clean';
+const HOMEWORK_KEY = 'tanarseged_pro_v12_homeworks';
 
 const defaultScale = [
   { grade: 5, min: 85 },

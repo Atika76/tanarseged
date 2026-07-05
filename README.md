@@ -1,3 +1,3 @@
-# TanárSegéd PRO v11
+# TanárSegéd PRO v12
 
-Mobilnézet és régi cache/service worker javítva.
+Mobil és cache javított verzió, TanárSegéd favicon ikonnal.
