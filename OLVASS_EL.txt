@@ -1,0 +1,20 @@
+TanárSegéd PRO v1
+
+Indítás:
+1. Csomagold ki a zip fájlt.
+2. Nyisd meg az index.html fájlt böngészőben.
+
+Funkciók:
+- dolgozat neve, osztály és maximális pontszám beállítása
+- átírható ponthatárok
+- gyors jegykalkulátor
+- osztálylista névvel és pontszámmal
+- automatikus százalék és jegy
+- osztályátlag, legjobb, leggyengébb eredmény és jegyeloszlás
+- mentés a böngésző helyi tárhelyébe
+- mentett dolgozat visszatöltése
+- CSV export Excelhez
+- PDF/nyomtatás böngészőből
+
+Fontos:
+Ez az első működő webes verzió. Internet nélkül is működik, miután egyszer megnyitottad böngészőben.
