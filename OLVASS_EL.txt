@@ -1,17 +1,18 @@
-TanárSegéd PRO v7 – Feladatlap helyett Házi feladat kezelő
+TanárSegéd PRO v8 – eredeti Jegyek kinézet + Házi feladatok
+
+Ez a verzió a feltöltött régi v2 kinézetre épül.
 
 Változások:
+- A Jegyek oldal vissza lett állítva a korábbi, részletes kinézetre:
+  Dolgozat adatai, Ponthatárok, Gyors számoló, Osztálylista,
+  Összesítés, Mentett dolgozatok.
 - A Feladatlap menüpont kikerült.
 - Helyette Házi feladatok menüpont került be.
-- Régi kinézet megtartva.
-- Funkciók:
-  - gyors jegykalkulátor
-  - házi feladat mentés/listázás/másolás/törlés
-  - óravázlat készítő
-  - értékelő és szülői üzenetek
-  - véletlen felelő és csoportbontó
+- A Házi feladatok működése:
+  mentés, listázás, megnyitás, törlés, másolható üzenet.
 
 Használat:
 1. Csomagold ki a zip-et.
 2. Nyisd meg az index.html fájlt.
-3. Minden adat a böngészőben mentődik, nincs szükség internetre.
+3. GitHub Pages esetén mindhárom fájl legyen egy mappában:
+   index.html, styles.css, app.js
