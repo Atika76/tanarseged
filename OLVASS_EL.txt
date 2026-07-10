@@ -1,22 +1,13 @@
-TanárSegéd PRO v12 – ikon hozzáadva
+TanárSegéd PRO v13 – megosztható változat
 
-Változás:
-- A böngészőfülön a földgömb helyett TanárSegéd ikon jelenik meg.
-- Új fájl: favicon.svg
-- Az index.html tartalmazza:
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=12" />
+Használat:
+1. Csomagold ki a ZIP-et egy tetszőleges mappába.
+2. Nyisd meg az index.html fájlt Chrome, Edge vagy Firefox böngészőben.
+3. Először az Osztályok menüben hozz létre egy tesztosztályt és névsort.
+4. A fejléc Mentés letöltése gombjával készíts rendszeres biztonsági mentést.
 
-Feltöltés GitHubra:
-1. Töltsd fel ezeket:
-   index.html
-   styles.css
-   app.js
-   favicon.svg
-   README.md
-   OLVASS_EL.txt
+Fontos adatvédelmi szabály:
+- Nyilvános teszteléshez ne valódi tanulóneveket és ne érzékeny adatokat használj.
+- A böngészőadatok törlése a helyi adatokat is törölheti, ezért a mentés fontos.
 
-2. Ha a régi földgömb marad:
-   - Ctrl + F5
-   - vagy nyisd meg így:
-     https://atika76.github.io/tanarseged/?v=12
-   - telefonon/Messengerben lehet, hogy kell pár perc vagy inkognitó/Chrome.
+Facebookos teszteléshez a FACEBOOK_POSZT.txt fájlban találsz kész szöveget.
