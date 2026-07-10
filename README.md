@@ -1,39 +1,56 @@
-# TanárSegéd PRO v14
+# TanárSegéd PRO v15
 
-Egyszerű, magyar nyelvű tanári segédprogram. Sima HTML, CSS és JavaScript alapú, bejelentkezés és külső szerver nélkül fut. Az adatok az adott böngésző helyi tárhelyén maradnak.
+Magyar nyelvű, helyben futó tanári segédprogram. Sima HTML, CSS és JavaScript alapú: nincs bejelentkezés, külső API, szolgáltató vagy szerver. Az adatok a használt böngésző helyi tárhelyén tárolódnak.
 
 ## Funkciók
 
-- **Ma:** mai órák, esedékes és közelgő házik, legutóbbi dolgozat, napló és tanulói esemény.
-- **Jegyek:** osztálylista, pontok, bónuszpontok, ponthatárok, jegyszámítás, elemzés, CSV-export és nyomtatás.
-- **Órai napló:** óránkénti téma, tananyag, házi, hiányzók, felelők, megjegyzés és óraállapot.
-- **Házi feladatok:** mentés, lezárás és másolható tájékoztató.
-- **Tanulók:** osztály- és névsor-kezelés, CSV-import, tanulói események és mini adatlap.
-- **Óravázlat:** szerkeszthető, menthető óravázlat pontos időkerettel.
-- **Szövegek:** értékelő és szülői üzenetek, menthető szövegekkel.
-- **Tanári eszközök:** méltányos felelőválasztó és csoportbontó.
-- **Adatmentés:** v14-es JSON-mentés, visszaállítás, demó adatok és kétlépcsős adattörlés.
+- **Ma:** aktuális dátum, mai órák, házi határidők, legutóbbi dolgozat, napló és tanulói esemény.
+- **Jegyek:** pontok, bónuszpontok, ponthatárok, jegyszámítás, elemzés, CSV-export és nyomtatás.
+- **Órai napló:** óraállapot, tananyag, hiányzók, felelők, házi és másolható összefoglaló.
+- **Naplóból házi:** a naplóban megadott házi opcionálisan külön házi bejegyzésként is menthető.
+- **Tanulók:** osztálylista és CSV-import, egyéni és tömeges tanulói események, mini adatlap.
+- **Tanulói adatlap:** dátumtartomány szerinti szűrés, másolás és nyomtatás/PDF.
+- **Óravázlat, Szövegek, Tanári eszközök:** a korábbi működő funkciók megmaradtak.
+- **Tanév és félév:** az új dolgozatok, házik, naplók, események és óravázlatok automatikusan megkapják az aktuális besorolást.
+- **Archiválás:** egy tanév rekordjai archiválhatók, megnyithatók, exportálhatók, visszaállíthatók vagy kétlépcsős megerősítéssel törölhetők.
+- **Adatmentés:** metaadatokat tartalmazó v15 JSON-mentés, v14/v15 import, hozzáfűzés vagy felülírás, demóadatok és tárhely-kijelzés.
+
+## Első indítás és adatvédelem
+
+Első indításkor adatvédelmi figyelmeztetés jelenik meg. Kipróbáláshoz használj kitalált neveket. Valódi tanulói adatok használata előtt ellenőrizd az intézményi és adatvédelmi előírásokat.
+
+Az adatok másik eszközön nem jelennek meg automatikusan. A böngészőadatok törlése elveszítheti őket, ezért az **Adatmentés** oldalon rendszeresen készíts JSON-mentést.
 
 ## Használat
 
-1. Csomagold ki a ZIP-fájlt egy tetszőleges mappába.
+1. Csomagold ki a ZIP-et egy saját mappába.
 2. Nyisd meg az `index.html` fájlt Chrome, Edge vagy Firefox böngészőben.
-3. A **Tanulók** oldalon hozz létre egy osztályt, majd add hozzá vagy CSV-ből töltsd fel a névsort.
-4. A többi modul már ezt a közös osztálylistát használja.
-5. Fontos munka előtt és után készíts mentést az **Adatmentés** oldalon.
+3. A **Tanulók** oldalon hozz létre osztályt, majd töltsd fel a névsort.
+4. Az **Adatmentés** oldalon ellenőrizd vagy állítsd be a tanévet és félévet.
+5. Rendszeresen tölts le mentést.
 
-## Mentés és adatátvétel
+## Visszajelzési link beállítása
 
-A v14 a saját, `tanarseged_pro_v14` localStorage-kulcsát használja. Első megnyitáskor képes a korábbi v13-as helyi adatokat v14-be másolni; a régi kulcsot nem törli automatikusan.
+Nyisd meg az `app.js` fájlt, és a legelső soroknál keresd meg ezt a sort:
 
-Az exportált JSON-fájl visszatöltése előtt a program ellenőrzi, hogy valódi TanárSegéd PRO v14 mentésről van-e szó. Hibás fájl esetén nem írja felül az adatokat.
+```js
+const FEEDBACK_URL = "";
+```
+
+Illeszd be a Google Űrlap teljes linkjét az üres idézőjelek közé, például:
+
+```js
+const FEEDBACK_URL = "https://forms.gle/sajat-url";
+```
+
+Mentés után a **Véleményt küldök** gomb új lapon nyitja meg az űrlapot. Üres értéknél az alkalmazás egyértelmű tájékoztatást jelenít meg.
+
+## v14 adatok átvétele
+
+A v15 külön `tanarseged_pro_v15` localStorage-kulcsot használ. Ha v14-es helyi adatot talál, azt egyszer átveszi v15-be, miközben a v14 kulcsot nem törli. Az átvétel előtt belső v15-ös migrációs biztonsági másolat is készül.
 
 ## GitHub Pages feltöltés
 
-Töltsd fel a ZIP gyökerében lévő `index.html`, `styles.css`, `app.js`, `favicon.svg`, `README.md`, `OLVASS_EL.txt` és `CHANGELOG.md` fájlokat egy GitHub-repozitórium főkönyvtárába. A Pages beállításainál válaszd a fő ágat és a `/ (root)` könyvtárat. Az `index.html` lesz a főoldal.
+Töltsd fel a ZIP gyökerében lévő `index.html`, `styles.css`, `app.js`, `favicon.svg`, `README.md`, `OLVASS_EL.txt` és `CHANGELOG.md` fájlokat egy GitHub-repozitórium főkönyvtárába. A Pages beállításainál válaszd a fő ágat és a `/ (root)` könyvtárat.
 
-Nincs service worker, `sw.js`, manifest vagy külső API. Frissítés után, ha kell, használj `Ctrl + F5`-öt.
-
-## Adatvédelem
-
-Ez a próbaverzió az adatokat kizárólag a használt böngészőben tárolja. Valódi tanulói adatok használata előtt ellenőrizd az intézményi és adatvédelmi előírásokat. Közös gépen ne hagyj érzékeny adatokat, és rendszeresen tölts le biztonsági mentést.
+Nincs service worker, `sw.js`, manifest, `advanced.html`, CDN vagy szerverkapcsolat. Frissítés után szükség esetén használj `Ctrl + F5`-öt.

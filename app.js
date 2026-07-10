@@ -1,16 +1,45 @@
 const FEEDBACK_URL = "";
-const DATA_KEY = 'tanarseged_pro_v14';
+const DATA_KEY = 'tanarseged_pro_v15';
+const V14_DATA_KEY = 'tanarseged_pro_v14';
 const V13_DATA_KEY = 'tanarseged_pro_v13';
 const LEGACY_KEY = 'tanarseged_pro_v12_clean';
+const MIGRATION_BACKUP_KEY = 'tanarseged_pro_v15_v14_migration_backup';
 const DEFAULT_SCALE = [{ grade: 5, min: 85 }, { grade: 4, min: 70 }, { grade: 3, min: 55 }, { grade: 2, min: 40 }, { grade: 1, min: 0 }];
 const $ = id => document.getElementById(id);
 const clone = value => typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value));
 const uid = () => crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-const todayIso = () => new Date().toISOString().slice(0, 10);
+function todayIso() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDaysIso(days){
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function defaultSchoolYear(){
+  const date = new Date();
+  const year = date.getFullYear();
+  return date.getMonth() >= 7 ? `${year}/${year + 1}` : `${year - 1}/${year}`;
+}
+
+function defaultSettings(){ return { schoolYear: defaultSchoolYear(), semester: '1', privacyAccepted: false, showArchived: false, archiveYearFilter: '', lastBackupAt: '', lastImportAt: '' }; }
+
+function newRecordMeta(){ return { schoolYear: data?.settings?.schoolYear || defaultSchoolYear(), semester: data?.settings?.semester || '1', archived: false }; }
+
+function recordMeta(raw){ return { schoolYear: cleanString(raw?.schoolYear) || 'Nincs besorolva', semester: cleanString(raw?.semester), archived: Boolean(raw?.archived) }; }
 
 function emptyData(){
-  return { version: 14, activeClassId: '', activeAssessmentId: '', activeLogId: '', activeStudentEventId: '', classes: [], assessments: [], homeworks: [], lessons: [], lessonLogs: [], studentEvents: [], texts: [], tasks: [], calledHistory: {}, settings: {} };
+  return { version: 15, activeClassId: '', activeAssessmentId: '', activeLogId: '', activeStudentEventId: '', classes: [], assessments: [], homeworks: [], lessons: [], lessonLogs: [], studentEvents: [], texts: [], tasks: [], calledHistory: {}, settings: defaultSettings() };
 }
 
 let data = emptyData();
@@ -25,7 +54,16 @@ function toast(message){
 }
 
 function save(){
-  localStorage.setItem(DATA_KEY, JSON.stringify(data));
+  setSaveStatus('saving');
+  try {
+    localStorage.setItem(DATA_KEY, JSON.stringify(data));
+    setSaveStatus('saved');
+    return true;
+  } catch(error) {
+    setSaveStatus('error');
+    toast(error?.name === 'QuotaExceededError' ? 'A helyi tárhely megtelt. Készíts mentést és archiváld a régi tanéveket.' : 'Mentési hiba történt.');
+    return false;
+  }
 }
 
 function cleanString(value){ return String(value ?? '').trim(); }
@@ -40,7 +78,7 @@ function createClass(name, subject = '', students = []){
 
 function createAssessment(classId = data.activeClassId){
   const schoolClass = getClass(classId);
-  return { id: uid(), classId: classId || '', title: '', subject: schoolClass?.subject || '', date: todayIso(), maxPoints: 100, scale: clone(DEFAULT_SCALE), results: {}, savedAt: new Date().toISOString() };
+  return { id: uid(), classId: classId || '', title: '', subject: schoolClass?.subject || '', date: todayIso(), maxPoints: 100, scale: clone(DEFAULT_SCALE), results: {}, savedAt: new Date().toISOString(), ...newRecordMeta() };
 }
 
 function migrateLegacy(legacy){
@@ -79,16 +117,16 @@ function normalizeData(candidate){
   safe.assessments = Array.isArray(candidate.assessments) ? candidate.assessments.map(raw => ({
     id: raw.id || uid(), classId: raw.classId || '', title: cleanString(raw.title), subject: cleanString(raw.subject), date: /^\d{4}-\d{2}-\d{2}$/.test(raw.date || '') ? raw.date : todayIso(), maxPoints: clamp(Number(raw.maxPoints) || 100, 1, 10000),
     scale: Array.isArray(raw.scale) && raw.scale.length === 5 ? raw.scale.map(row => ({ grade: Number(row.grade), min: clamp(Number(row.min) || 0, 0, 100) })) : clone(DEFAULT_SCALE),
-    results: raw.results && typeof raw.results === 'object' ? raw.results : {}, savedAt: raw.savedAt || new Date().toISOString()
+    results: raw.results && typeof raw.results === 'object' ? raw.results : {}, savedAt: raw.savedAt || new Date().toISOString(), ...recordMeta(raw)
   })) : [];
-  safe.homeworks = Array.isArray(candidate.homeworks) ? candidate.homeworks.map(raw => ({ id: raw.id || uid(), classId: raw.classId || '', subject: cleanString(raw.subject), deadline: raw.deadline || '', text: cleanString(raw.text), note: cleanString(raw.note), done: Boolean(raw.done), createdAt: raw.createdAt || new Date().toISOString() })) : [];
-  safe.lessons = Array.isArray(candidate.lessons) ? candidate.lessons.map(raw => ({ id: raw.id || uid(), classId: raw.classId || '', subject: cleanString(raw.subject), topic: cleanString(raw.topic), date: raw.date || '', output: String(raw.output || ''), createdAt: raw.createdAt || new Date().toISOString() })) : [];
-  safe.lessonLogs = Array.isArray(candidate.lessonLogs) ? candidate.lessonLogs.map(raw => ({ id: raw.id || uid(), date: /^\d{4}-\d{2}-\d{2}$/.test(raw.date || '') ? raw.date : todayIso(), classId: raw.classId || '', subject: cleanString(raw.subject), topic: cleanString(raw.topic), content: cleanString(raw.content), homework: cleanString(raw.homework), absentees: cleanString(raw.absentees), responders: cleanString(raw.responders), note: cleanString(raw.note), status: ['megtartva','elmaradt','helyettesites'].includes(raw.status) ? raw.status : 'megtartva', createdAt: raw.createdAt || new Date().toISOString(), updatedAt: raw.updatedAt || '' })) : [];
-  safe.studentEvents = Array.isArray(candidate.studentEvents) ? candidate.studentEvents.map(raw => ({ id: raw.id || uid(), date: /^\d{4}-\d{2}-\d{2}$/.test(raw.date || '') ? raw.date : todayIso(), classId: raw.classId || '', studentId: raw.studentId || '', studentName: cleanString(raw.studentName), type: ['hianyzott','nincs_hazi','nincs_felszereles','felelt','dicseret','figyelmeztetes','egyeb'].includes(raw.type) ? raw.type : 'egyeb', note: cleanString(raw.note), createdAt: raw.createdAt || new Date().toISOString(), updatedAt: raw.updatedAt || '' })) : [];
-  safe.texts = Array.isArray(candidate.texts) ? candidate.texts.map(raw => ({ id: raw.id || uid(), classId: raw.classId || '', studentId: raw.studentId || '', title: cleanString(raw.title), content: String(raw.content || ''), createdAt: raw.createdAt || new Date().toISOString() })).filter(text => text.content) : [];
+  safe.homeworks = Array.isArray(candidate.homeworks) ? candidate.homeworks.map(raw => ({ id: raw.id || uid(), classId: raw.classId || '', subject: cleanString(raw.subject), deadline: raw.deadline || '', text: cleanString(raw.text), note: cleanString(raw.note), done: Boolean(raw.done), createdAt: raw.createdAt || new Date().toISOString(), sourceLogId: raw.sourceLogId || '', ...recordMeta(raw) })) : [];
+  safe.lessons = Array.isArray(candidate.lessons) ? candidate.lessons.map(raw => ({ id: raw.id || uid(), classId: raw.classId || '', subject: cleanString(raw.subject), topic: cleanString(raw.topic), date: raw.date || '', output: String(raw.output || ''), createdAt: raw.createdAt || new Date().toISOString(), ...recordMeta(raw) })) : [];
+  safe.lessonLogs = Array.isArray(candidate.lessonLogs) ? candidate.lessonLogs.map(raw => ({ id: raw.id || uid(), date: /^\d{4}-\d{2}-\d{2}$/.test(raw.date || '') ? raw.date : todayIso(), classId: raw.classId || '', subject: cleanString(raw.subject), topic: cleanString(raw.topic), content: cleanString(raw.content), homework: cleanString(raw.homework), homeworkDeadline: raw.homeworkDeadline || '', linkedHomeworkId: raw.linkedHomeworkId || '', absentees: cleanString(raw.absentees), responders: cleanString(raw.responders), note: cleanString(raw.note), status: ['megtartva','elmaradt','helyettesites'].includes(raw.status) ? raw.status : 'megtartva', createdAt: raw.createdAt || new Date().toISOString(), updatedAt: raw.updatedAt || '', ...recordMeta(raw) })) : [];
+  safe.studentEvents = Array.isArray(candidate.studentEvents) ? candidate.studentEvents.map(raw => ({ id: raw.id || uid(), date: /^\d{4}-\d{2}-\d{2}$/.test(raw.date || '') ? raw.date : todayIso(), classId: raw.classId || '', studentId: raw.studentId || '', studentName: cleanString(raw.studentName), type: ['hianyzott','nincs_hazi','nincs_felszereles','felelt','dicseret','figyelmeztetes','egyeb'].includes(raw.type) ? raw.type : 'egyeb', note: cleanString(raw.note), createdAt: raw.createdAt || new Date().toISOString(), updatedAt: raw.updatedAt || '', ...recordMeta(raw) })) : [];
+  safe.texts = Array.isArray(candidate.texts) ? candidate.texts.map(raw => ({ id: raw.id || uid(), classId: raw.classId || '', studentId: raw.studentId || '', title: cleanString(raw.title), content: String(raw.content || ''), createdAt: raw.createdAt || new Date().toISOString(), ...recordMeta(raw) })).filter(text => text.content) : [];
   safe.tasks = Array.isArray(candidate.tasks) ? candidate.tasks.map(raw => ({ id: raw.id || uid(), text: cleanString(raw.text), date: raw.date || '', done: Boolean(raw.done) })).filter(task => task.text) : [];
   safe.calledHistory = candidate.calledHistory && typeof candidate.calledHistory === 'object' ? candidate.calledHistory : {};
-  safe.settings = candidate.settings && typeof candidate.settings === 'object' ? candidate.settings : {};
+  safe.settings = { ...defaultSettings(), ...(candidate.settings && typeof candidate.settings === 'object' ? candidate.settings : {}) };
   safe.activeClassId = safe.classes.some(schoolClass => schoolClass.id === candidate.activeClassId) ? candidate.activeClassId : (safe.classes[0]?.id || '');
   safe.activeAssessmentId = safe.assessments.some(assessment => assessment.id === candidate.activeAssessmentId) ? candidate.activeAssessmentId : (safe.assessments[0]?.id || '');
   safe.activeLogId = safe.lessonLogs.some(log => log.id === candidate.activeLogId) ? candidate.activeLogId : '';
@@ -104,10 +142,15 @@ function readStoredJson(key){
 function load(){
   const stored = readStoredJson(DATA_KEY);
   if(stored){ data = normalizeData(stored); return; }
+  const v14 = readStoredJson(V14_DATA_KEY);
+  if(v14){
+    try { localStorage.setItem(MIGRATION_BACKUP_KEY, JSON.stringify({ migratedAt: new Date().toISOString(), source: v14 })); } catch {}
+    data = normalizeData(v14); save(); toast('A v14-es helyi adatok átvétele sikeresen megtörtént.'); return;
+  }
   const v13 = readStoredJson(V13_DATA_KEY);
   if(v13){ data = normalizeData(v13); save(); toast('A korábbi helyi adatok átvétele sikeresen megtörtént.'); return; }
   const legacy = readStoredJson(LEGACY_KEY);
-  if(legacy){ data = migrateLegacy(legacy); save(); toast('A korábbi dolgozatadatok átkerültek a v14-be.'); }
+  if(legacy){ data = migrateLegacy(legacy); save(); toast('A korábbi dolgozatadatok átvétele sikeresen megtörtént.'); }
 }
 
 function getClass(id = data.activeClassId){ return data.classes.find(schoolClass => schoolClass.id === id); }
@@ -186,8 +229,8 @@ function renderHero(){
 
 function renderDashboard(){
   const activeClassId = data.activeClassId;
-  const openHomeworks = data.homeworks.filter(homework => homework.classId === activeClassId && !homework.done);
-  const todaysLogs = data.lessonLogs.filter(log => log.classId === activeClassId && log.date === todayIso() && log.status !== 'elmaradt');
+  const openHomeworks = visibleRecords(data.homeworks).filter(homework => homework.classId === activeClassId && !homework.done);
+  const todaysLogs = visibleRecords(data.lessonLogs).filter(log => log.classId === activeClassId && log.date === todayIso() && log.status !== 'elmaradt');
   const assessment = currentAssessment();
   const missingScores = assessment && assessment.classId === activeClassId ? validAssessmentStudents(assessment).filter(student => {
     const result = assessment.results[student.id];
@@ -197,14 +240,14 @@ function renderDashboard(){
   $('metricLessons').textContent = todaysLogs.length;
   $('metricMissingScores').textContent = missingScores;
 
-  renderLatestCard('latestAssessment', data.assessments.filter(item => item.classId === activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0], item => `${item.title || 'Névtelen dolgozat'} · ${formatDate(item.date)}`, 'Még nincs mentett dolgozat.');
-  renderLatestCard('latestLog', data.lessonLogs.filter(item => item.classId === activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0], item => `${item.subject || 'Tantárgy'} · ${item.topic || 'Téma nélkül'} · ${formatDate(item.date)}`, 'Még nincs mentett órai napló.');
-  renderLatestCard('latestEvent', data.studentEvents.filter(item => item.classId === activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0], item => `${item.studentName || 'Tanuló'} · ${eventTypeLabel(item.type)} · ${formatDate(item.date)}`, 'Még nincs mentett tanulói esemény.');
+  renderLatestCard('latestAssessment', visibleRecords(data.assessments).filter(item => item.classId === activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0], item => `${item.title || 'Névtelen dolgozat'} · ${formatDate(item.date)}`, 'Még nincs mentett dolgozat.');
+  renderLatestCard('latestLog', visibleRecords(data.lessonLogs).filter(item => item.classId === activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0], item => `${item.subject || 'Tantárgy'} · ${item.topic || 'Téma nélkül'} · ${formatDate(item.date)}`, 'Még nincs mentett órai napló.');
+  renderLatestCard('latestEvent', visibleRecords(data.studentEvents).filter(item => item.classId === activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0], item => `${item.studentName || 'Tanuló'} · ${eventTypeLabel(item.type)} · ${formatDate(item.date)}`, 'Még nincs mentett tanulói esemény.');
 
   const events = [
     ...openHomeworks.map(homework => ({ date: homework.deadline, type: 'Házi', title: `${homework.subject || 'Tantárgy'} – ${homework.text || 'Feladat nélkül'}` })),
-    ...data.lessons.filter(lesson => lesson.classId === activeClassId).map(lesson => ({ date: lesson.date, type: 'Óravázlat', title: `${lesson.subject || 'Tantárgy'} – ${lesson.topic || 'Téma nélkül'}` })),
-    ...data.lessonLogs.filter(log => log.classId === activeClassId && log.date >= todayIso()).map(log => ({ date: log.date, type: 'Órai napló', title: `${log.subject || 'Tantárgy'} – ${log.topic || 'Téma nélkül'}` }))
+    ...visibleRecords(data.lessons).filter(lesson => lesson.classId === activeClassId).map(lesson => ({ date: lesson.date, type: 'Óravázlat', title: `${lesson.subject || 'Tantárgy'} – ${lesson.topic || 'Téma nélkül'}` })),
+    ...visibleRecords(data.lessonLogs).filter(log => log.classId === activeClassId && log.date >= todayIso()).map(log => ({ date: log.date, type: 'Órai napló', title: `${log.subject || 'Tantárgy'} – ${log.topic || 'Téma nélkül'}` }))
   ].sort((a, b) => dateSortValue(a.date) - dateSortValue(b.date)).slice(0, 6);
   const timeline = $('todayTimeline');
   timeline.className = 'timeline';
@@ -245,7 +288,7 @@ function renderClasses(){
     const item = document.createElement('div'); item.className = 'saved-item';
     item.innerHTML = `<b>${escapeHtml(schoolClass.name)}</b><small>${escapeHtml(schoolClass.subject || 'Tantárgy nélkül')} · ${schoolClass.students.filter(student => student.active !== false).length} aktív tanuló</small>`;
     const button = document.createElement('button'); button.className = schoolClass.id === data.activeClassId ? 'secondary' : ''; button.type = 'button'; button.textContent = schoolClass.id === data.activeClassId ? 'Aktív osztály' : 'Kiválasztás';
-    button.addEventListener('click', () => { data.activeClassId = schoolClass.id; if(!currentAssessment() || currentAssessment().classId !== schoolClass.id) data.activeAssessmentId = data.assessments.find(assessment => assessment.classId === schoolClass.id)?.id || ''; save(); renderAll(); });
+    button.addEventListener('click', () => { data.activeClassId = schoolClass.id; if(!currentAssessment() || currentAssessment().classId !== schoolClass.id) data.activeAssessmentId = visibleRecords(data.assessments).find(assessment => assessment.classId === schoolClass.id)?.id || ''; save(); renderAll(); });
     item.append(button); list.append(item);
   });
   const schoolClass = getClass();
@@ -409,8 +452,9 @@ function renderAssessmentStats(){
 
 function renderAssessmentList(){
   const list = $('assessmentList'); list.replaceChildren();
-  if(!data.assessments.length){ list.innerHTML = '<p class="empty">Nincs mentett dolgozat.</p>'; return; }
-  data.assessments.slice().sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date)).forEach(assessment => {
+  const storedAssessments = visibleRecords(data.assessments);
+  if(!storedAssessments.length){ list.innerHTML = '<p class="empty">Nincs mentett dolgozat.</p>'; return; }
+  storedAssessments.slice().sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date)).forEach(assessment => {
     const item = document.createElement('div'); item.className = 'saved-item';
     const { evaluated } = assessmentNumbers(assessment);
     item.innerHTML = `<b>${escapeHtml(assessment.title || 'Névtelen dolgozat')}</b><small>${escapeHtml(className(assessment.classId))} · ${formatDate(assessment.date)} · ${evaluated.length} értékelt tanuló</small>`;
@@ -439,7 +483,7 @@ function homeworkMessage(homework){
 
 function renderHomeworks(){
   const list = $('homeworkList'); list.replaceChildren();
-  const active = data.homeworks.filter(homework => homework.classId === data.activeClassId).sort((a,b) => Number(a.done) - Number(b.done) || dateSortValue(a.deadline) - dateSortValue(b.deadline));
+  const active = visibleRecords(data.homeworks).filter(homework => homework.classId === data.activeClassId).sort((a,b) => Number(a.done) - Number(b.done) || dateSortValue(a.deadline) - dateSortValue(b.deadline));
   if(!active.length){ list.innerHTML = '<p class="empty">Még nincs házi feladat az aktív osztályhoz.</p>'; $('homeworkMessage').value = 'Itt jelenik meg a házi feladat üzenete.'; return; }
   active.forEach(homework => {
     const item = document.createElement('div'); item.className = 'saved-item';
@@ -477,7 +521,7 @@ function generateLesson(){
 
 function renderLessons(){
   const list = $('lessonList'); list.replaceChildren();
-  const lessons = data.lessons.filter(lesson => lesson.classId === data.activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date));
+  const lessons = visibleRecords(data.lessons).filter(lesson => lesson.classId === data.activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date));
   if(!lessons.length){ list.innerHTML = '<p class="empty">Még nincs mentett óraterv az aktív osztályhoz.</p>'; return; }
   lessons.forEach(lesson => {
     const item = document.createElement('div'); item.className = 'saved-item'; item.innerHTML = `<b>${escapeHtml(lesson.topic || 'Téma nélküli óraterv')}</b><small>${formatDate(lesson.date)} · ${escapeHtml(lesson.subject || 'Tantárgy nélkül')}</small>`;
@@ -591,7 +635,7 @@ function updateActiveClass(classId){
   if(!getClass(classId)) return;
   data.activeClassId = classId;
   const assessment = currentAssessment();
-  if(!assessment || assessment.classId !== classId) data.activeAssessmentId = data.assessments.find(candidate => candidate.classId === classId)?.id || '';
+  if(!assessment || assessment.classId !== classId) data.activeAssessmentId = visibleRecords(data.assessments).find(candidate => candidate.classId === classId)?.id || '';
   save(); renderAll();
 }
 
@@ -621,7 +665,7 @@ function loadLog(log){
 function renderLogs(){
   const list = $('logList'); list.replaceChildren();
   const date = $('logFilterDate').value, classId = $('logFilterClass').value, subject = cleanString($('logFilterSubject').value).toLocaleLowerCase('hu-HU');
-  const logs = data.lessonLogs.filter(log => (!date || log.date === date) && (!classId || log.classId === classId) && (!subject || log.subject.toLocaleLowerCase('hu-HU').includes(subject))).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date));
+  const logs = visibleRecords(data.lessonLogs).filter(log => (!date || log.date === date) && (!classId || log.classId === classId) && (!subject || log.subject.toLocaleLowerCase('hu-HU').includes(subject))).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date));
   if(!logs.length){ const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'Még nincs mentett órai napló a megadott szűréssel.'; list.append(empty); return; }
   logs.forEach(log => {
     const item = document.createElement('div'); item.className = 'saved-item';
@@ -704,7 +748,7 @@ function renderStudentEvents(){
 }
 
 function renderSavedTexts(){
-  const list = $('textList'); list.replaceChildren(); const texts = data.texts.filter(text => !text.classId || text.classId === data.activeClassId).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const list = $('textList'); list.replaceChildren(); const texts = visibleRecords(data.texts).filter(text => !text.classId || text.classId === data.activeClassId).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
   if(!texts.length){ const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'Még nincs mentett szöveg.'; list.append(empty); return; }
   texts.forEach(text => { const item = document.createElement('div'); item.className = 'saved-item'; const title = document.createElement('b'); title.textContent = text.title || 'Mentett szöveg'; const detail = document.createElement('small'); detail.textContent = `${className(text.classId)} · ${new Date(text.createdAt).toLocaleString('hu-HU')}`; const actions = document.createElement('div'); actions.className = 'saved-actions'; const open = document.createElement('button'); open.className = 'secondary'; open.type = 'button'; open.textContent = 'Megnyitás'; open.addEventListener('click', () => { data.activeClassId = text.classId || data.activeClassId; $('textOutput').value = text.content; save(); renderAll(); showTab('texts'); }); const remove = document.createElement('button'); remove.className = 'danger'; remove.type = 'button'; remove.textContent = 'Törlés'; remove.addEventListener('click', () => { data.texts = data.texts.filter(item => item.id !== text.id); save(); renderSavedTexts(); }); actions.append(open,remove); item.append(title,detail,actions); list.append(item); });
 }
@@ -712,8 +756,8 @@ function renderSavedTexts(){
 function buildDemoData(){
   const demo = emptyData(); const schoolClass = createClass('7.B', 'matematika', ['Minta Anna','Példa Bence','Kitalált Csenge','Teszt Dávid','Minta Emese','Példa Ferenc','Kitalált Gréta','Teszt Hunor']); demo.classes.push(schoolClass); demo.activeClassId = schoolClass.id;
   const assessment = { id:uid(), classId:schoolClass.id, title:'Törtek dolgozat', subject:'matematika', date:todayIso(), maxPoints:50, scale:clone(DEFAULT_SCALE), results:{}, savedAt:new Date().toISOString() }; [47,42,38,31,28,24,19,45].forEach((points,index) => assessment.results[schoolClass.students[index].id] = { points, bonus:0, status:'ok' }); demo.assessments.push(assessment); demo.activeAssessmentId = assessment.id;
-  demo.homeworks.push({ id:uid(), classId:schoolClass.id, subject:'matematika', deadline:todayIso(), text:'Munkafüzet 32. oldal, 4–6. feladat.', note:'Aki hiányzott, annak is pótolnia kell.', done:false, createdAt:new Date().toISOString() }, { id:uid(), classId:schoolClass.id, subject:'matematika', deadline:new Date(Date.now()+86400000*3).toISOString().slice(0,10), text:'Gyakorló feladatsor a törtek összeadásáról.', note:'', done:false, createdAt:new Date().toISOString() });
-  demo.lessonLogs.push({ id:uid(), date:todayIso(), classId:schoolClass.id, subject:'matematika', topic:'Törtek összeadása', content:'Közös példák és páros gyakorlás.', homework:'Munkafüzet 32. oldal, 4–6. feladat.', absentees:'Teszt Hunor', responders:'Minta Anna, Példa Bence', note:'Következő órán rövid ismétlés.', status:'megtartva', createdAt:new Date().toISOString(), updatedAt:'' }, { id:uid(), date:new Date(Date.now()-86400000).toISOString().slice(0,10), classId:schoolClass.id, subject:'matematika', topic:'Törtek áttekintése', content:'Nevező és számláló ismétlése.', homework:'', absentees:'', responders:'Kitalált Csenge', note:'', status:'megtartva', createdAt:new Date().toISOString(), updatedAt:'' });
+  demo.homeworks.push({ id:uid(), classId:schoolClass.id, subject:'matematika', deadline:todayIso(), text:'Munkafüzet 32. oldal, 4–6. feladat.', note:'Aki hiányzott, annak is pótolnia kell.', done:false, createdAt:new Date().toISOString() }, { id:uid(), classId:schoolClass.id, subject:'matematika', deadline:addDaysIso(3), text:'Gyakorló feladatsor a törtek összeadásáról.', note:'', done:false, createdAt:new Date().toISOString() });
+  demo.lessonLogs.push({ id:uid(), date:todayIso(), classId:schoolClass.id, subject:'matematika', topic:'Törtek összeadása', content:'Közös példák és páros gyakorlás.', homework:'Munkafüzet 32. oldal, 4–6. feladat.', absentees:'Teszt Hunor', responders:'Minta Anna, Példa Bence', note:'Következő órán rövid ismétlés.', status:'megtartva', createdAt:new Date().toISOString(), updatedAt:'' }, { id:uid(), date:addDaysIso(-1), classId:schoolClass.id, subject:'matematika', topic:'Törtek áttekintése', content:'Nevező és számláló ismétlése.', homework:'', absentees:'', responders:'Kitalált Csenge', note:'', status:'megtartva', createdAt:new Date().toISOString(), updatedAt:'' });
   const addEvent = (index,type,note,date=todayIso()) => demo.studentEvents.push({ id:uid(), date, classId:schoolClass.id, studentId:schoolClass.students[index].id, studentName:schoolClass.students[index].name, type, note, createdAt:new Date().toISOString(), updatedAt:'' }); addEvent(0,'dicseret','Aktívan segítette a csoportmunkát.'); addEvent(1,'felelt','Biztosan használta a tanult fogalmakat.'); addEvent(2,'nincs_hazi','A házi feladat pótlását vállalta.'); addEvent(3,'hianyzott','Igazolt hiányzás.'); addEvent(4,'figyelmeztetes','Az órai felszerelésre figyeljen.');
   demo.lessons.push({ id:uid(), classId:schoolClass.id, subject:'matematika', topic:'Törtek összeadása', date:todayIso(), output:'ÓRAVÁZLAT\nTantárgy: matematika\nOsztály: 7.B\nTéma: Törtek összeadása\n\nRáhangolódás, közös feldolgozás, páros gyakorlás és kilépőkártya.', createdAt:new Date().toISOString() });
   demo.texts.push({ id:uid(), classId:schoolClass.id, studentId:schoolClass.students[0].id, title:'Szülői üzenet minta', content:'Kedves Szülő!\n\nSzeretném megdicsérni Minta Anna mai munkáját. Figyelmesen és aktívan dolgozott a matematikaórán.\n\nÜdvözlettel:', createdAt:new Date().toISOString() });
@@ -792,6 +836,130 @@ function bindEvents(){
   $('mobileMenuBtn').addEventListener('click', () => $('mobileMenu').classList.contains('open') ? closeMobileMenu() : openMobileMenu()); $('mobileMenuClose').addEventListener('click', () => closeMobileMenu()); $('mobileOverlay').addEventListener('click', () => closeMobileMenu()); document.addEventListener('keydown', event => { if(event.key === 'Escape' && $('mobileMenu').classList.contains('open')) closeMobileMenu(); }); window.addEventListener('popstate', () => { if($('mobileMenu').classList.contains('open')) closeMobileMenu(true); });
 }
 
+// v15 bővítések: helyi mentés, tanévkezelés, archiválás és tömeges események
+let pendingImport = null;
+let bulkStudentSelection = new Set();
+
+function setSaveStatus(status){
+  const labels = { saving:'Mentés…', saved:'Minden változás elmentve', error:'Mentési hiba' };
+  ['saveStatus','mobileSaveStatus'].forEach(id => { const el = $(id); if(!el) return; el.textContent = id === 'mobileSaveStatus' && status === 'saved' ? 'Elmentve' : labels[status] || labels.saved; el.dataset.status = status; });
+}
+
+function currentTermLabel(){ return `${data.settings.schoolYear || 'Nincs besorolva'} · ${data.settings.semester ? `${data.settings.semester}. félév` : 'Nincs besorolva'}`; }
+function recordVisible(record){ if(!record?.archived) return !data.settings.archiveYearFilter; return Boolean(data.settings.showArchived) && (!data.settings.archiveYearFilter || record.schoolYear === data.settings.archiveYearFilter); }
+function visibleRecords(records){ return (records || []).filter(recordVisible); }
+function dateInRange(date, start, end){ return (!start || date >= start) && (!end || date <= end); }
+function withCurrentTerm(record){ return { ...record, ...newRecordMeta() }; }
+function collectionNames(){ return ['assessments','homeworks','lessons','lessonLogs','studentEvents','texts']; }
+
+function currentAssessment(){ return visibleRecords(data.assessments).find(assessment => assessment.id === data.activeAssessmentId) || visibleRecords(data.assessments).find(assessment => assessment.classId === data.activeClassId); }
+function assessmentById(id){ return data.assessments.find(assessment => assessment.id === id); }
+
+function renderTermInfo(){
+  $('termStatus').textContent = currentTermLabel(); $('mobileTermStatus').textContent = currentTermLabel(); $('todayTermLine').textContent = `${currentTermLabel()} · az aktív osztály adatai alapján.`;
+}
+
+function currentLogFromForm(){
+  return { date:$('logDate').value || todayIso(), classId:$('logClass').value || data.activeClassId, subject:cleanString($('logSubject').value), topic:cleanString($('logTopic').value), content:cleanString($('logContent').value), homework:cleanString($('logHomework').value), homeworkDeadline:$('logHomeworkDeadline').value, saveHomework:Boolean($('logSaveHomework').checked), absentees:cleanString($('logAbsentees').value), responders:cleanString($('logResponders').value), note:cleanString($('logNote').value), status:$('logStatus').value };
+}
+
+function logSummary(log){ return `ÓRAI NAPLÓ\n\nDátum: ${formatDate(log.date)}\nOsztály: ${className(log.classId)}\nTantárgy: ${log.subject || '–'}\nTéma: ${log.topic || '–'}\nMai tananyag: ${log.content || '–'}\nHázi feladat: ${log.homework || '–'}\nHiányzók: ${log.absentees || '–'}\nFelelők: ${log.responders || '–'}\nMegjegyzés: ${log.note || '–'}\nÁllapot: ${logStatusLabel(log.status)}\nTanév / félév: ${log.schoolYear || 'Nincs besorolva'}${log.semester ? ` / ${log.semester}. félév` : ''}`; }
+function updateLogOutput(){ $('logOutput').value = logSummary({ ...currentLogFromForm(), ...newRecordMeta() }); }
+function clearLogForm(){ data.activeLogId=''; $('logDate').value=todayIso(); $('logClass').value=data.activeClassId; $('logSubject').value=getClass()?.subject || ''; ['logTopic','logContent','logHomework','logHomeworkDeadline','logAbsentees','logResponders','logNote'].forEach(id => $(id).value=''); $('logStatus').value='megtartva'; $('logSaveHomework').checked=false; updateLogOutput(); }
+function loadLog(log){ data.activeLogId=log.id; data.activeClassId=log.classId; save(); renderAll(); $('logDate').value=log.date; $('logClass').value=log.classId; $('logSubject').value=log.subject; $('logTopic').value=log.topic; $('logContent').value=log.content; $('logHomework').value=log.homework; $('logHomeworkDeadline').value=log.homeworkDeadline || ''; $('logSaveHomework').checked=Boolean(log.linkedHomeworkId); $('logAbsentees').value=log.absentees; $('logResponders').value=log.responders; $('logNote').value=log.note; $('logStatus').value=log.status; updateLogOutput(); showTab('logs'); }
+
+function saveLogV15(){
+  const incoming=currentLogFromForm(); if(!incoming.classId || !incoming.subject || !incoming.topic){ toast('Töltsd ki legalább az osztályt, tantárgyat és óratémát.'); return; }
+  let log=data.lessonLogs.find(item=>item.id===data.activeLogId && !item.archived);
+  if(log){ Object.assign(log,incoming,{updatedAt:new Date().toISOString()}); } else { log=withCurrentTerm({id:uid(),...incoming,linkedHomeworkId:'',createdAt:new Date().toISOString(),updatedAt:''}); data.lessonLogs.push(log); data.activeLogId=log.id; }
+  if(incoming.saveHomework && incoming.homework){
+    if(!incoming.homeworkDeadline) toast('A házi feladat határideje nincs megadva; a feladat határidő nélkül mentve.');
+    let homework=data.homeworks.find(item=>item.id===log.linkedHomeworkId && !item.archived);
+    if(!homework){ homework=withCurrentTerm({id:uid(),classId:incoming.classId,subject:incoming.subject,deadline:incoming.homeworkDeadline,text:incoming.homework,note:`Órai naplóból: ${formatDate(incoming.date)}`,done:false,createdAt:new Date().toISOString(),sourceLogId:log.id}); data.homeworks.push(homework); log.linkedHomeworkId=homework.id; }
+    else Object.assign(homework,{classId:incoming.classId,subject:incoming.subject,deadline:incoming.homeworkDeadline,text:incoming.homework});
+  }
+  delete log.saveHomework; data.activeClassId=incoming.classId; save(); updateLogOutput(); renderAll(); toast(log.linkedHomeworkId ? 'Órai napló és kapcsolódó házi feladat mentve.' : 'Órai napló mentve.');
+}
+
+function eventsForStudent(classId, student, start='', end=''){ return visibleRecords(data.studentEvents).filter(event=>event.classId===classId && (event.studentId===student.id || (!event.studentId && event.studentName===student.name)) && dateInRange(event.date,start,end)); }
+function assessmentResultsForStudent(classId, student, start='', end=''){ return visibleRecords(data.assessments).filter(assessment=>assessment.classId===classId && dateInRange(assessment.date,start,end)).map(assessment=>{ const result=resultOf(assessment,student.id), percent=scorePercent(result,assessment); return percent===null?null:{assessment,percent:Math.min(100,percent),grade:gradeFromPercent(Math.min(100,percent),assessment.scale)}; }).filter(Boolean); }
+function studentSummary(classId,student,start=$('studentStartDate')?.value||'',end=$('studentEndDate')?.value||''){
+  if(!student) return 'TANULÓI ADATLAP\n\nNincs kiválasztott tanuló.'; const results=assessmentResultsForStudent(classId,student,start,end),events=eventsForStudent(classId,student,start,end),avg=results.length?results.reduce((sum,item)=>sum+item.percent,0)/results.length:null,count=type=>events.filter(event=>event.type===type).length,last=events.filter(event=>event.type==='felelt').sort((a,b)=>dateSortValue(b.date)-dateSortValue(a.date))[0],notes=events.filter(event=>event.note).sort((a,b)=>dateSortValue(b.date)-dateSortValue(a.date)).slice(0,3).map(event=>`${formatDate(event.date)}: ${event.note}`);
+  return `TANULÓI ADATLAP\n\nTanuló: ${student.name}\nOsztály: ${className(classId)}\nDátumtartomány: ${start||'kezdet'} – ${end||'jelen'}\nTanév / félév: ${currentTermLabel()}\nDolgozateredmények: ${results.length?results.map(item=>`${item.assessment.title||'Dolgozat'} ${item.percent.toFixed(1)}% (${item.grade})`).join('; '):'Nincs rögzített eredmény.'}\nÁtlagos százalék: ${avg===null?'–':`${avg.toFixed(1)}%`}\nJegyek: ${results.length?results.map(item=>item.grade).join(', '):'–'}\nHiányzó házik: ${count('nincs_hazi')}\nHiányzások: ${count('hianyzott')}\nDicséretek: ${count('dicseret')}\nFigyelmeztetések: ${count('figyelmeztetes')}\nUtolsó felelés: ${last?formatDate(last.date):'–'}\nLegutóbbi megjegyzések: ${notes.length?notes.join(' | '):'–'}`;
+}
+function renderStudentProfile(){
+  const classId=$('studentProfileClass').value||data.activeClassId; fillStudentSelect('studentProfileSelect',classId,'Válassz tanulót',$('studentSearch').value); const student=studentById(classId,$('studentProfileSelect').value),box=$('studentProfileOutput'); box.replaceChildren(); if(!student){const e=document.createElement('p');e.className='empty';e.textContent='Válassz osztályt és tanulót az adatlap megjelenítéséhez.';box.append(e);return;} const text=studentSummary(classId,student),title=document.createElement('h3'),term=document.createElement('p'),pre=document.createElement('pre'); title.textContent=`${student.name} · ${className(classId)}`;term.className='profile-term';term.textContent=`${currentTermLabel()} · ${$('studentStartDate').value||'kezdet'} – ${$('studentEndDate').value||'jelen'}`;pre.className='profile-summary';pre.textContent=text;box.append(title,term,pre);
+}
+
+function updateEventMode(){ const multiple=$('eventModeMultiple').checked; $('singleStudentField').hidden=multiple; $('bulkStudentPicker').hidden=!multiple; if(multiple) renderBulkStudentPicker(); }
+function renderBulkStudentPicker(){ const classId=$('eventClass').value||data.activeClassId,box=$('bulkStudentList');box.replaceChildren(); activeStudents(classId).forEach(student=>{const label=document.createElement('label');label.className='bulk-student';const check=document.createElement('input');check.type='checkbox';check.value=student.id;check.checked=bulkStudentSelection.has(student.id);check.addEventListener('change',()=>{check.checked?bulkStudentSelection.add(student.id):bulkStudentSelection.delete(student.id)});const name=document.createElement('span');name.textContent=student.name;label.append(check,name);box.append(label);}); }
+function clearEventForm(){ data.activeStudentEventId='';bulkStudentSelection.clear();$('eventDate').value=todayIso();$('eventClass').value=data.activeClassId;fillStudentSelect('eventStudent',data.activeClassId,'Válassz tanulót');$('eventType').value='hianyzott';$('eventNote').value='';$('eventModeSingle').checked=true;updateEventMode(); }
+function saveEventV15(){
+  const classId=$('eventClass').value||data.activeClassId,base={date:$('eventDate').value||todayIso(),classId,type:$('eventType').value,note:cleanString($('eventNote').value)},multiple=$('eventModeMultiple').checked; let students=[];
+  if(multiple) students=activeStudents(classId).filter(student=>bulkStudentSelection.has(student.id)); else { const student=studentById(classId,$('eventStudent').value); if(student) students=[student]; }
+  if(!classId||!students.length){toast(multiple?'Nincs kijelölt tanuló.':'Válassz osztályt és tanulót.');return;}
+  let saved=0;
+  if(!multiple && data.activeStudentEventId){const event=data.studentEvents.find(item=>item.id===data.activeStudentEventId&&!item.archived);if(event){Object.assign(event,base,{studentId:students[0].id,studentName:students[0].name,updatedAt:new Date().toISOString()});saved=1;}}
+  if(!saved) students.forEach(student=>{const duplicate=data.studentEvents.find(event=>!event.archived&&event.classId===classId&&event.studentId===student.id&&event.date===base.date&&event.type===base.type&&event.note===base.note);if(!duplicate){data.studentEvents.push(withCurrentTerm({id:uid(),...base,studentId:student.id,studentName:student.name,createdAt:new Date().toISOString(),updatedAt:''}));saved++;}});
+  data.activeClassId=classId;save();renderAll();toast(saved?`${saved} tanulói esemény elmentve.`:'Azonos esemény már szerepel a listában.');
+}
+
+function renderStudentEvents(){
+  const formClassId=$('eventClass').value||data.activeClassId;fillStudentSelect('eventStudent',formClassId,'Válassz tanulót');if($('eventModeMultiple').checked)renderBulkStudentPicker();const filterClassId=$('eventFilterClass').value;fillStudentSelect('eventFilterStudent',filterClassId||data.activeClassId,'Minden tanuló');if(!filterClassId){const select=$('eventFilterStudent');select.disabled=false;select.replaceChildren(new Option('Minden tanuló',''));data.classes.forEach(schoolClass=>activeStudents(schoolClass.id).forEach(student=>select.add(new Option(`${student.name} (${schoolClass.name})`,`${schoolClass.id}:${student.id}`))));}
+  const date=$('eventFilterDate').value,type=$('eventFilterType').value,studentFilter=$('eventFilterStudent').value;const events=visibleRecords(data.studentEvents).filter(event=>(!date||event.date===date)&&(!filterClassId||event.classId===filterClassId)&&(!type||event.type===type)&&(!studentFilter||(studentFilter.includes(':')?`${event.classId}:${event.studentId}`===studentFilter:event.studentId===studentFilter))).sort((a,b)=>dateSortValue(b.date)-dateSortValue(a.date));$('eventOutput').value=eventSummary(events);const list=$('eventList');list.replaceChildren();if(!events.length){const e=document.createElement('p');e.className='empty';e.textContent='Nincs rögzített esemény a megadott szűréssel.';list.append(e);return;}events.forEach(event=>{const item=document.createElement('div');item.className='saved-item';const title=document.createElement('b');title.textContent=`${formatDate(event.date)} · ${event.studentName||'Tanuló'} · ${eventTypeLabel(event.type)}`;const detail=document.createElement('small');detail.textContent=`${className(event.classId)}${event.note?` · ${event.note}`:''}`;const actions=document.createElement('div');actions.className='saved-actions';const open=document.createElement('button');open.className='secondary';open.type='button';open.textContent='Megnyitás / szerkesztés';open.addEventListener('click',()=>{data.activeStudentEventId=event.id;data.activeClassId=event.classId;save();renderAll();$('eventDate').value=event.date;$('eventClass').value=event.classId;fillStudentSelect('eventStudent',event.classId,'Válassz tanulót');$('eventStudent').value=event.studentId;$('eventType').value=event.type;$('eventNote').value=event.note;$('eventModeSingle').checked=true;updateEventMode();showTab('classes');});const remove=document.createElement('button');remove.className='danger';remove.type='button';remove.textContent='Törlés';remove.addEventListener('click',()=>{if(confirm('Törlöd ezt a tanulói eseményt?')){data.studentEvents=data.studentEvents.filter(item=>item.id!==event.id);save();renderAll();toast('Tanulói esemény törölve.');}});actions.append(open,remove);item.append(title,detail,actions);list.append(item);});
+}
+
+function buildExportPayload(source=data){ return { appName:'TanárSegéd', appVersion:'15', dataVersion:2, exportDate:new Date().toISOString(), schoolYear:source.settings?.schoolYear||'Nincs besorolva', semester:source.settings?.semester||'', data:source }; }
+function exportJson(name='tanarseged-pro-v15-mentes'){ data.settings.lastBackupAt=new Date().toISOString(); save(); download(`${name}-${todayIso()}.json`,JSON.stringify(buildExportPayload(),null,2),'application/json'); renderBackupPanel(); toast('Biztonsági mentés elkészült.'); }
+function estimateSize(){ try{return new Blob([JSON.stringify(data)]).size;}catch{return JSON.stringify(data).length*2;} }
+function formatBytes(bytes){ return bytes>=1024*1024?`${(bytes/(1024*1024)).toFixed(2)} MB`:`${Math.max(1,Math.ceil(bytes/1024))} KB`; }
+function renderBackupPanel(){
+  $('schoolYearInput').value=data.settings.schoolYear||'';$('semesterInput').value=data.settings.semester||'1';const bytes=estimateSize();$('storageSize').textContent=formatBytes(bytes);$('lastBackupAt').textContent=data.settings.lastBackupAt?new Date(data.settings.lastBackupAt).toLocaleString('hu-HU'):'–';$('lastImportAt').textContent=data.settings.lastImportAt?new Date(data.settings.lastImportAt).toLocaleString('hu-HU'):'–';$('storageWarning').hidden=bytes<4*1024*1024;$('showArchivedToggle').checked=Boolean(data.settings.showArchived);
+  const years=[...new Set(collectionNames().flatMap(name=>data[name].filter(record=>record.archived).map(record=>record.schoolYear||'Nincs besorolva')))];const list=$('archiveList');list.replaceChildren();if(!years.length){const e=document.createElement('p');e.className='empty';e.textContent='Még nincs archivált tanév.';list.append(e);}years.forEach(year=>{const item=document.createElement('div');item.className='saved-item';const title=document.createElement('b');title.textContent=year;const actions=document.createElement('div');actions.className='saved-actions';const open=document.createElement('button');open.className='secondary';open.type='button';open.textContent='Megnyitás';open.addEventListener('click',()=>{data.settings.showArchived=true;data.settings.archiveYearFilter=year;save();renderAll();showTab('today');});const exportButton=document.createElement('button');exportButton.className='secondary';exportButton.type='button';exportButton.textContent='Export';exportButton.addEventListener('click',()=>exportArchivedYear(year));const restore=document.createElement('button');restore.className='secondary';restore.type='button';restore.textContent='Visszaállítás';restore.addEventListener('click',()=>{collectionNames().forEach(name=>data[name].forEach(record=>{if(record.archived&&record.schoolYear===year)record.archived=false;}));save();renderAll();toast('Az archivált tanév visszaállítva.');});const remove=document.createElement('button');remove.className='danger';remove.type='button';remove.textContent='Végleges törlés';remove.addEventListener('click',()=>{if(!confirm(`${year} archivált rekordjai végleg törlődnek. Folytatod?`))return;if(prompt('Második megerősítés: írd be pontosan ezt: TÖRLÉS')!=='TÖRLÉS')return;collectionNames().forEach(name=>data[name]=data[name].filter(record=>!(record.archived&&record.schoolYear===year)));save();renderAll();toast('Archivált tanév végleg törölve.');});actions.append(open,exportButton,restore,remove);item.append(title,actions);list.append(item);});
+}
+function exportArchivedYear(year){ const archived=clone(data);collectionNames().forEach(name=>archived[name]=data[name].filter(record=>record.archived&&record.schoolYear===year));archived.settings={...data.settings,schoolYear:year};download(`tanarseged-pro-v15-archiv-${year.replace('/','-')}-${todayIso()}.json`,JSON.stringify(buildExportPayload(archived),null,2),'application/json');toast('Archivált tanév exportálva.'); }
+function archiveCurrentSchoolYear(){ const year=data.settings.schoolYear;if(!year){toast('Állíts be aktuális tanévet.');return;}if(!confirm(`${year} aktív rekordjait archiválod. Előtte automatikus mentés készül. Folytatod?`))return;exportJson('tanarseged-pro-v15-archivalas-elott');let count=0;collectionNames().forEach(name=>data[name].forEach(record=>{if(!record.archived&&record.schoolYear===year){record.archived=true;count++;}}));data.settings.showArchived=false;data.settings.archiveYearFilter='';save();renderAll();toast(`${count} rekord archiválva.`); }
+function appendImportedData(imported){ const source=normalizeData(imported),collections=['classes',...collectionNames(),'tasks'];collections.forEach(name=>{const known=new Set(data[name].map(item=>item.id));source[name].forEach(item=>{if(!known.has(item.id)){data[name].push(item);known.add(item.id);}});});Object.entries(source.calledHistory||{}).forEach(([id,value])=>{if(!data.calledHistory[id])data.calledHistory[id]=value;}); }
+function prepareImport(parsed){
+  let imported,meta;if(parsed?.appName==='TanárSegéd'&&String(parsed.appVersion)==='15'&&Number(parsed.dataVersion)===2&&parsed.data){imported=parsed.data;meta={date:parsed.exportDate,year:parsed.schoolYear,semester:parsed.semester,version:'v15'};}else if(parsed?.app==='tanarseged-pro-v14'&&Number(parsed.version)===14&&parsed.data){imported=parsed.data;meta={date:parsed.exportedAt,year:'Nincs besorolva',semester:'',version:'v14'};}else throw new Error('invalid');const normalized=normalizeData(imported);pendingImport=normalized;const count=collectionNames().reduce((sum,name)=>sum+(normalized[name]?.length||0),0);$('importMeta').textContent=`Mentés verziója: ${meta.version}\nExport dátuma: ${meta.date?new Date(meta.date).toLocaleString('hu-HU'):'nincs megadva'}\nTanév: ${meta.year||'Nincs besorolva'}\nFélév: ${meta.semester||'Nincs besorolva'}\nRekordok száma: ${count}`;$('importDialog').showModal();
+}
+function completeImport(mode){ if(!pendingImport)return;if(mode==='replace')data=pendingImport;else appendImportedData(pendingImport);data.settings={...defaultSettings(),...data.settings,lastImportAt:new Date().toISOString()};pendingImport=null;save();$('importDialog').close();renderAll();toast('Import sikeresen elkészült.'); }
+function maybeShowFirstPrivacy(){ if(!data.settings.privacyAccepted)$('firstPrivacyDialog').showModal(); }
+
+function buildDemoData(){
+  const demo=emptyData();demo.settings={...defaultSettings(),privacyAccepted:true};const schoolClass=createClass('7.B','matematika',['Fiktív Alma','Teszt Bors','Minta Csepke','Próba Dénes','Kitalált Emőke','Teszt Füge','Minta Gála','Próba Hunor']);demo.classes.push(schoolClass);demo.activeClassId=schoolClass.id;const makeAssessment=(title,date,points)=>{const a={id:uid(),classId:schoolClass.id,title,subject:'matematika',date,maxPoints:50,scale:clone(DEFAULT_SCALE),results:{},savedAt:new Date().toISOString(),schoolYear:demo.settings.schoolYear,semester:demo.settings.semester,archived:false};points.forEach((value,index)=>a.results[schoolClass.students[index].id]={points:value,bonus:0,status:'ok'});return a;};const first=makeAssessment('Törtek dolgozat',addDaysIso(-2),[47,42,38,31,28,24,19,45]),second=makeAssessment('Geometria röpdolgozat',todayIso(),[40,35,44,29,33,27,21,46]);demo.assessments.push(first,second);demo.activeAssessmentId=second.id;const linkedHomework={id:uid(),classId:schoolClass.id,subject:'matematika',deadline:addDaysIso(2),text:'Munkafüzet 32. oldal, 4–6. feladat.',note:'Órai naplóból létrehozva.',done:false,createdAt:new Date().toISOString(),sourceLogId:'',schoolYear:demo.settings.schoolYear,semester:demo.settings.semester,archived:false};demo.homeworks.push(linkedHomework,{id:uid(),classId:schoolClass.id,subject:'matematika',deadline:todayIso(),text:'Rövid törtes gyakorlás.',note:'',done:false,createdAt:new Date().toISOString(),...newRecordMeta()},{id:uid(),classId:schoolClass.id,subject:'matematika',deadline:addDaysIso(5),text:'Geometria gyakorlófeladatok.',note:'',done:false,createdAt:new Date().toISOString(),...newRecordMeta()});const log1={id:uid(),date:todayIso(),classId:schoolClass.id,subject:'matematika',topic:'Törtek összeadása',content:'Közös példák és páros gyakorlás.',homework:linkedHomework.text,homeworkDeadline:linkedHomework.deadline,linkedHomeworkId:linkedHomework.id,absentees:'Próba Hunor',responders:'Fiktív Alma, Teszt Bors',note:'Következő órán rövid ismétlés.',status:'megtartva',createdAt:new Date().toISOString(),updatedAt:'',schoolYear:demo.settings.schoolYear,semester:demo.settings.semester,archived:false};linkedHomework.sourceLogId=log1.id;demo.lessonLogs.push(log1,{id:uid(),date:addDaysIso(-1),classId:schoolClass.id,subject:'matematika',topic:'Törtek áttekintése',content:'Nevező és számláló ismétlése.',homework:'',homeworkDeadline:'',linkedHomeworkId:'',absentees:'',responders:'Minta Csepke',note:'',status:'megtartva',createdAt:new Date().toISOString(),updatedAt:'',schoolYear:demo.settings.schoolYear,semester:demo.settings.semester,archived:false},{id:uid(),date:addDaysIso(-3),classId:schoolClass.id,subject:'matematika',topic:'Törtek bevezetése',content:'Képi modellek és közös példák.',homework:'',homeworkDeadline:'',linkedHomeworkId:'',absentees:'',responders:'',note:'',status:'megtartva',createdAt:new Date().toISOString(),updatedAt:'',schoolYear:demo.settings.schoolYear,semester:demo.settings.semester,archived:false});[['dicseret','Aktívan segítette a csoportmunkát.'],['felelt','Biztosan használta a tanult fogalmakat.'],['nincs_hazi','A házi feladat pótlását vállalta.'],['hianyzott','Igazolt hiányzás.'],['figyelmeztetes','Az órai felszerelésre figyeljen.']].forEach(([type,note],index)=>demo.studentEvents.push({id:uid(),date:todayIso(),classId:schoolClass.id,studentId:schoolClass.students[index].id,studentName:schoolClass.students[index].name,type,note,createdAt:new Date().toISOString(),updatedAt:'',schoolYear:demo.settings.schoolYear,semester:demo.settings.semester,archived:false}));demo.lessons.push({id:uid(),classId:schoolClass.id,subject:'matematika',topic:'Törtek összeadása',date:todayIso(),output:'ÓRAVÁZLAT\nTantárgy: matematika\nOsztály: 7.B\nTéma: Törtek összeadása\n\nRáhangolódás, közös feldolgozás, páros gyakorlás és kilépőkártya.',createdAt:new Date().toISOString(),schoolYear:demo.settings.schoolYear,semester:demo.settings.semester,archived:false});demo.texts.push({id:uid(),classId:schoolClass.id,studentId:schoolClass.students[0].id,title:'Szülői üzenet minta',content:'Kedves Szülő!\n\nSzeretném megdicsérni Fiktív Alma mai munkáját. Figyelmesen és aktívan dolgozott a matematikaórán.\n\nÜdvözlettel:',createdAt:new Date().toISOString(),schoolYear:demo.settings.schoolYear,semester:demo.settings.semester,archived:false});return demo;
+}
+function applyDemo(mode){const demo=buildDemoData();if(mode==='replace')data=demo;else{data.classes.push(...demo.classes);collectionNames().forEach(name=>data[name].push(...demo[name]));data.activeClassId=demo.activeClassId;data.activeAssessmentId=demo.activeAssessmentId;}save();$('demoDialog').close();renderAll();toast('Demó adatok betöltve.');}
+
+function renderAll(){ renderSelectors();renderHero();renderTermInfo();renderDashboard();renderClasses();renderAssessment();renderHomeworks();renderLessons();renderTextStudents();renderLogs();renderStudentProfile();renderStudentEvents();renderSavedTexts();renderBackupPanel();if(!$('logDate').value)clearLogForm();if(!$('eventDate').value)clearEventForm();setSaveStatus('saved'); }
+
+function bindEventsV15(){
+  document.querySelectorAll('.tab,.mobile-tab').forEach(button=>button.addEventListener('click',()=>showTab(button.dataset.tab)));document.querySelectorAll('.go-tab').forEach(button=>button.addEventListener('click',()=>showTab(button.dataset.go)));document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener('click',()=>copyText($(button.dataset.copy).value||$(button.dataset.copy).textContent)));['globalClassSelect','hwClass','lessonClass','textClass','toolsClass'].forEach(id=>$(id).addEventListener('change',event=>updateActiveClass(event.target.value)));
+  $('assessmentClass').addEventListener('change',event=>{const assessment=currentAssessment();if(!assessment)return;assessment.classId=event.target.value;data.activeClassId=event.target.value;if(!assessment.subject)assessment.subject=getClass(event.target.value)?.subject||'';save();renderAll();});
+  $('taskForm').addEventListener('submit',event=>{event.preventDefault();const text=cleanString($('taskText').value);if(!text)return;data.tasks.push({id:uid(),text,date:$('taskDate').value,done:false});$('taskText').value='';$('taskDate').value='';save();renderDashboard();});
+  $('addClassBtn').addEventListener('click',()=>{const name=cleanString($('newClassName').value);if(!name){toast('Adj nevet az osztálynak.');return;}const schoolClass=createClass(name,$('newClassSubject').value);data.classes.push(schoolClass);data.activeClassId=schoolClass.id;const assessment=createAssessment(schoolClass.id);data.assessments.push(assessment);data.activeAssessmentId=assessment.id;$('newClassName').value='';$('newClassSubject').value='';save();renderAll();toast('Osztály létrehozva. Most add hozzá a névsort.');});
+  $('saveClassBtn').addEventListener('click',()=>{const schoolClass=getClass(),name=cleanString($('editClassName').value);if(!schoolClass||!name){toast('Az osztály neve nem lehet üres.');return;}schoolClass.name=name;schoolClass.subject=cleanString($('editClassSubject').value);save();renderAll();toast('Osztályadatok mentve.');});
+  $('deleteClassBtn').addEventListener('click',()=>{const schoolClass=getClass();if(!schoolClass||!confirm(`${schoolClass.name} és a hozzá tartozó rekordok törlődnek. Folytatod?`))return;data.classes=data.classes.filter(item=>item.id!==schoolClass.id);collectionNames().forEach(name=>data[name]=data[name].filter(item=>item.classId!==schoolClass.id));data.activeClassId=data.classes[0]?.id||'';data.activeAssessmentId=visibleRecords(data.assessments).find(item=>item.classId===data.activeClassId)?.id||'';save();renderAll();toast('Osztály törölve.');});
+  $('addStudentsBtn').addEventListener('click',()=>{addStudentNames($('studentPaste').value);$('studentPaste').value='';});$('rosterImportInput').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;try{const text=await file.text(),lines=text.replace(/^\ufeff/,'').split(/\r?\n/).map(line=>line.split(/[;,\t]/)[0]).filter(Boolean);if(lines.length&&/név|tanuló/i.test(lines[0]))lines.shift();addStudentNames(lines.join('\n'));}catch{toast('A CSV-fájl beolvasása nem sikerült.');}finally{event.target.value='';}});
+  $('newAssessmentBtn').addEventListener('click',()=>{if(!data.activeClassId){toast('Előbb hozz létre osztályt.');return;}const assessment=createAssessment(data.activeClassId);data.assessments.push(assessment);data.activeAssessmentId=assessment.id;save();renderAll();toast('Új dolgozat létrehozva.');});['assessmentTitle','assessmentSubject','assessmentDate','assessmentMaxPoints'].forEach(id=>$(id).addEventListener('input',()=>{const assessment=currentAssessment();if(!assessment)return;assessment.title=$('assessmentTitle').value.trim();assessment.subject=$('assessmentSubject').value.trim();assessment.date=$('assessmentDate').value||todayIso();assessment.maxPoints=clamp(Number($('assessmentMaxPoints').value)||100,1,10000);save();renderAssessmentRows();renderAssessmentStats();renderQuickCalc();renderAssessmentList();renderDashboard();}));$('saveAssessmentBtn').addEventListener('click',()=>{const assessment=currentAssessment();if(!assessment)return;assessment.savedAt=new Date().toISOString();save();renderAssessmentList();toast('Dolgozat mentve.');});$('resetScaleBtn').addEventListener('click',()=>{const assessment=currentAssessment();if(!assessment)return;assessment.scale=clone(DEFAULT_SCALE);save();renderAssessment();toast('Ponthatárok visszaállítva.');});['quickPoints','quickBonus'].forEach(id=>$(id).addEventListener('input',renderQuickCalc));$('exportCsvBtn').addEventListener('click',exportCsv);$('copySummaryBtn').addEventListener('click',()=>copyText(assessmentSummary()));$('printAssessmentBtn').addEventListener('click',()=>{showTab('assessments');window.print();});
+  $('saveHomeworkBtn').addEventListener('click',()=>{const classId=$('hwClass').value||data.activeClassId,text=cleanString($('hwText').value);if(!classId||!text){toast('Válassz osztályt és írd be a feladatot.');return;}data.homeworks.push(withCurrentTerm({id:uid(),classId,subject:cleanString($('hwSubject').value)||getClass(classId)?.subject||'',deadline:$('hwDeadline').value,text,note:cleanString($('hwNote').value),done:false,createdAt:new Date().toISOString(),sourceLogId:''}));data.activeClassId=classId;$('hwText').value='';$('hwNote').value='';save();renderAll();toast('Házi feladat mentve.');});$('clearDoneHomeworksBtn').addEventListener('click',()=>{const done=data.homeworks.filter(item=>!item.archived&&item.done).length;if(!done){toast('Nincs lezárt házi feladat.');return;}if(confirm(`${done} lezárt házi feladatot törölsz. Folytatod?`)){data.homeworks=data.homeworks.filter(item=>!item.done);save();renderAll();toast('Lezárt házik törölve.');}});
+  $('newLogBtn').addEventListener('click',clearLogForm);['logDate','logClass','logSubject','logTopic','logContent','logHomework','logHomeworkDeadline','logAbsentees','logResponders','logNote','logStatus','logSaveHomework'].forEach(id=>$(id).addEventListener('input',updateLogOutput));$('logClass').addEventListener('change',()=>{if(!$('logSubject').value)$('logSubject').value=getClass($('logClass').value)?.subject||'';updateLogOutput();});$('saveLogBtn').addEventListener('click',saveLogV15);$('logFilterDate').addEventListener('input',renderLogs);$('logFilterClass').addEventListener('change',renderLogs);$('logFilterSubject').addEventListener('input',renderLogs);$('clearLogFiltersBtn').addEventListener('click',()=>{$('logFilterDate').value='';$('logFilterClass').value='';$('logFilterSubject').value='';renderLogs();});
+  $('lessonClass').addEventListener('change',()=>{const schoolClass=getClass($('lessonClass').value);if(schoolClass&&!$('lessonSubject').value)$('lessonSubject').value=schoolClass.subject;});$('generateLessonBtn').addEventListener('click',generateLesson);$('saveLessonBtn').addEventListener('click',()=>{const classId=$('lessonClass').value||data.activeClassId,output=$('lessonOutput').value.trim();if(!classId||!output||output.startsWith('Itt jelenik')){toast('Előbb készíts óravázlatot.');return;}data.lessons.push(withCurrentTerm({id:uid(),classId,subject:cleanString($('lessonSubject').value)||getClass(classId)?.subject||'',topic:cleanString($('lessonTopic').value),date:$('lessonDate').value||todayIso(),output,createdAt:new Date().toISOString()}));data.activeClassId=classId;save();renderAll();toast('Óravázlat mentve.');});$('printLessonBtn').addEventListener('click',()=>{showTab('lesson');window.print();});
+  $('generateTextBtn').addEventListener('click',generateText);$('saveTextBtn').addEventListener('click',()=>{const content=cleanString($('textOutput').value);if(!content||content.startsWith('Itt jelenik')){toast('Előbb készíts vagy írj be szöveget.');return;}data.texts.push(withCurrentTerm({id:uid(),classId:$('textClass').value||data.activeClassId,studentId:$('txtStudent').value||'',title:cleanString($('txtTopic').value)||$('txtType').selectedOptions[0].textContent,content,createdAt:new Date().toISOString()}));save();renderSavedTexts();toast('Szöveg mentve.');});
+  $('studentProfileClass').addEventListener('change',renderStudentProfile);$('studentSearch').addEventListener('input',renderStudentProfile);$('studentProfileSelect').addEventListener('change',renderStudentProfile);$('applyStudentDateFilterBtn').addEventListener('click',renderStudentProfile);$('clearStudentDateFilterBtn').addEventListener('click',()=>{$('studentStartDate').value='';$('studentEndDate').value='';renderStudentProfile();});$('copyStudentSummaryBtn').addEventListener('click',()=>copyText(studentSummary($('studentProfileClass').value||data.activeClassId,studentById($('studentProfileClass').value||data.activeClassId,$('studentProfileSelect').value))));$('printStudentProfileBtn').addEventListener('click',()=>{document.body.classList.add('print-student');window.print();setTimeout(()=>document.body.classList.remove('print-student'),500);});
+  $('newEventBtn').addEventListener('click',clearEventForm);$('eventModeSingle').addEventListener('change',updateEventMode);$('eventModeMultiple').addEventListener('change',updateEventMode);$('eventClass').addEventListener('change',()=>{bulkStudentSelection.clear();fillStudentSelect('eventStudent',$('eventClass').value,'Válassz tanulót');updateEventMode();});$('selectAllStudentsBtn').addEventListener('click',()=>{activeStudents($('eventClass').value||data.activeClassId).forEach(student=>bulkStudentSelection.add(student.id));renderBulkStudentPicker();});$('clearStudentSelectionBtn').addEventListener('click',()=>{bulkStudentSelection.clear();renderBulkStudentPicker();});$('saveEventBtn').addEventListener('click',saveEventV15);$('eventFilterDate').addEventListener('input',renderStudentEvents);$('eventFilterClass').addEventListener('change',renderStudentEvents);$('eventFilterStudent').addEventListener('change',renderStudentEvents);$('eventFilterType').addEventListener('change',renderStudentEvents);$('clearEventFiltersBtn').addEventListener('click',()=>{$('eventFilterDate').value='';$('eventFilterClass').value='';$('eventFilterStudent').value='';$('eventFilterType').value='';renderStudentEvents();});
+  $('pickRandomBtn').addEventListener('click',pickRandom);$('makeGroupsBtn').addEventListener('click',makeGroups);$('resetCalledBtn').addEventListener('click',()=>{if(confirm('Törlöd a felelőválasztási előzményeket?')){data.calledHistory={};save();toast('Felelőelőzmények törölve.');}});
+  $('saveTermBtn').addEventListener('click',()=>{const year=cleanString($('schoolYearInput').value);if(!/^\d{4}\/\d{4}$/.test(year)){toast('A tanév formátuma legyen például: 2026/2027');return;}data.settings.schoolYear=year;data.settings.semester=$('semesterInput').value;save();renderAll();toast('Tanév és félév mentve.');});$('backupBtn').addEventListener('click',()=>exportJson());$('restoreInput').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;try{prepareImport(JSON.parse(await file.text()));}catch{toast('Hibás vagy nem támogatott TanárSegéd mentés.');}finally{event.target.value='';}});$('importReplaceBtn').addEventListener('click',()=>completeImport('replace'));$('importAppendBtn').addEventListener('click',()=>completeImport('append'));$('importCancelBtn').addEventListener('click',()=>{pendingImport=null;$('importDialog').close();});$('demoDataBtn').addEventListener('click',()=>$('demoDialog').showModal());$('demoAppendBtn').addEventListener('click',()=>applyDemo('append'));$('demoReplaceBtn').addEventListener('click',()=>applyDemo('replace'));$('demoCancelBtn').addEventListener('click',()=>$('demoDialog').close());$('showArchivedToggle').addEventListener('change',()=>{data.settings.showArchived=$('showArchivedToggle').checked;if(!data.settings.showArchived)data.settings.archiveYearFilter='';save();renderAll();});$('archiveYearBtn').addEventListener('click',archiveCurrentSchoolYear);$('clearAllBtn').addEventListener('click',()=>{if(!confirm('Biztosan törlöd az összes v15-ös helyi adatot?'))return;if(prompt('Második megerősítés: írd be pontosan ezt: TÖRLÉS')!=='TÖRLÉS'){toast('Az adatok törlése megszakítva.');return;}data=emptyData();save();renderAll();clearLogForm();clearEventForm();toast('Minden v15-ös helyi adat törölve.');});
+  $('feedbackBtn').addEventListener('click',()=>{if(!FEEDBACK_URL){toast('A visszajelző űrlap linkje még nincs beállítva.');return;}window.open(FEEDBACK_URL,'_blank','noopener,noreferrer');});$('privacyBtn').addEventListener('click',()=>$('privacyDialog').showModal());$('closePrivacyBtn').addEventListener('click',()=>$('privacyDialog').close());$('openFirstPrivacyBtn').addEventListener('click',()=>$('firstPrivacyDialog').showModal());$('acceptPrivacyBtn').addEventListener('click',()=>{data.settings.privacyAccepted=true;save();$('firstPrivacyDialog').close();});$('firstPrivacyDemoBtn').addEventListener('click',()=>{data.settings.privacyAccepted=true;save();$('firstPrivacyDialog').close();$('demoDialog').showModal();});$('firstPrivacyDialog').addEventListener('cancel',event=>{if(!data.settings.privacyAccepted)event.preventDefault();});
+  $('mobileMenuBtn').addEventListener('click',()=>$('mobileMenu').classList.contains('open')?closeMobileMenu():openMobileMenu());$('mobileMenuClose').addEventListener('click',()=>closeMobileMenu());$('mobileOverlay').addEventListener('click',()=>closeMobileMenu());document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('mobileMenu').classList.contains('open'))closeMobileMenu();if(event.key==='Escape'&&$('firstPrivacyDialog').open){if(data.settings.privacyAccepted)$('firstPrivacyDialog').close();else event.preventDefault();}});window.addEventListener('popstate',()=>{if($('mobileMenu').classList.contains('open'))closeMobileMenu(true);});
+}
+
+function bindV15Supplement(){
+  $('assignUnclassifiedBtn').addEventListener('click',()=>{if(!confirm('A Nincs besorolva rekordok az aktuális tanévet és félévet kapják. Folytatod?'))return;let count=0;collectionNames().forEach(name=>data[name].forEach(record=>{if(record.schoolYear==='Nincs besorolva'){record.schoolYear=data.settings.schoolYear;record.semester=data.settings.semester;count++;}}));save();renderAll();toast(count?`${count} rekord tanévhez rendelve.`:'Nincs besorolatlan rekord.');});
+}
+
 load();
-bindEvents();
+bindEventsV15();
+bindV15Supplement();
 renderAll();
+maybeShowFirstPrivacy();

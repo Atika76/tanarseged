@@ -1,12 +1,13 @@
-TanárSegéd PRO v14
+TanárSegéd PRO v15
 
 1. Csomagold ki a ZIP-fájlt egy saját mappába.
 2. Nyisd meg az index.html fájlt Chrome, Edge vagy Firefox böngészőben.
-3. Először a Tanulók menüben hozz létre osztályt és töltsd fel a névsort.
-4. A fejléc Véleményt küldök gombjához az app.js első soraiban állítható be a FEEDBACK_URL.
-5. Az Adatmentés oldalon készíts rendszeres JSON-mentést.
+3. Az első adatvédelmi ablakban válaszd a Megértettem vagy a Demó adatok betöltése lehetőséget.
+4. Először a Tanulók menüben hozz létre osztályt és töltsd fel a névsort.
+5. Az Adatmentés oldalon állítsd be a tanévet és félévet, majd készíts rendszeresen JSON-mentést.
+6. A Véleményt küldök gombhoz az app.js tetején lévő FEEDBACK_URL állandóba írható Google Űrlap link.
 
 Fontos:
-- A program nem használ szervert, a megadott adatok a helyi böngészőben maradnak.
-- Nyilvános bemutatóhoz vagy teszteléshez ne használj valódi tanulói adatokat.
+- A program nem használ szervert; az adatok a helyi böngészőben maradnak.
+- Valódi tanulói adatokkal csak az intézményi és adatvédelmi előírások ellenőrzése után dolgozz.
 - A böngészőadatok törlése a helyi adatokat is törölheti, ezért a mentés fontos.

@@ -1,28 +1,23 @@
-# Változásnapló – TanárSegéd PRO v14
+# Változásnapló – TanárSegéd PRO v15
 
 ## Újdonságok
 
-- Új **Ma** kezdőoldal mai órákkal, házi határidőkkel, legutóbbi dolgozattal, órai naplóval és tanulói eseménnyel.
-- Új **Órai napló** modul mentéssel, szerkesztéssel, törléssel, szűréssel és másolható összefoglalóval.
-- Új **Tanulói események** a Tanulók oldalon, teljes esemény- és dátumszűréssel.
-- Új **Tanulói mini adatlap** dolgozateredményekkel, átlagokkal, jegyekkel és eseményösszesítéssel.
-- Új **Adatmentés** oldal JSON-exporttal, ellenőrzött importtal, kétlépcsős adattörléssel és demó adatokkal.
-- Új, kitalált adatokat használó demó: 7.B osztály, dolgozat, házik, órai naplók, események, óravázlat és szülői üzenet.
-- Új **Véleményt küldök** gomb; a hivatkozás az `app.js` tetején lévő `FEEDBACK_URL` állandóban állítható be.
-- Új mobil hamburger-menü 760 px alatt, fedéssel, Escape-zárással és vissza gombos kezeléssel.
-- Mobiljavítások 360, 390, 412 és 480 px szélességhez: egyoszlopos kártyák, érintésbarát gombok, helyi táblázatgörgetés és vízszintes kilógás elleni védelem.
-
-## Megőrzött funkciók
-
-- Jegyek, ponthatárok, CSV-export és nyomtatás.
-- Házi feladatok.
-- Óravázlat.
-- Értékelő és szülői szövegek.
-- Véletlen felelő és csoportbontó.
+- Helyi magyar dátumkezelés: a mai dátum többé nem UTC-alapú.
+- Automatikus mentési állapotjelző: Mentés, elmentve vagy mentési hiba.
+- Első indítási adatvédelmi figyelmeztetés, későbbi újranyitási lehetőséggel.
+- Órai naplóból külön Házi feladat bejegyzés hozható létre, határidővel és duplikációvédelemmel.
+- Tömeges tanulói eseményrögzítés kijelölhető névsorral.
+- Tanulói adatlap dátumszűréssel, összesítésmásolással és nyomtatás/PDF nézettel.
+- Tanév- és félévkezelés új rekordok automatikus besorolásával.
+- Tanévarchiválás automatikus mentéssel, megnyitással, exporttal, visszaállítással és kétlépcsős törléssel.
+- Tárhelyhasználat, utolsó mentés és import időpontjának kijelzése.
+- Továbbfejlesztett JSON export/import metaadatokkal, v14 és v15 támogatással, hozzáfűzéssel vagy felülírással.
+- Frissített demó: két dolgozat, három házi, három napló, több esemény, kapcsolt napló-házi példa, óravázlat és szülői üzenet.
+- Megőrzött és finomított mobil hamburger menü, érintésbarát tömeges kijelölővel és 360 px-re igazított modálokkal.
 
 ## Technikai változások
 
-- Egységes márkajelzés és fájlverzió: TanárSegéd PRO v14.
-- `styles.css?v=14` és `app.js?v=14` hivatkozások.
-- Új, v14-es localStorage-kulcs és nem romboló v13-adatátvétel.
-- Nincs service worker, `sw.js`, manifest, külső API vagy szerver.
+- Egységes verzió: TanárSegéd PRO v15.
+- `styles.css?v=15` és `app.js?v=15` hivatkozások.
+- Külön v15 localStorage-kulcs, nem romboló v14-adatátvétellel és belső migrációs másolattal.
+- Nincs service worker, `sw.js`, manifest, `advanced.html`, külső API vagy szerver.
