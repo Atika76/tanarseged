@@ -3,155 +3,117 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>TanárSegéd PRO v13</title>
-  <meta name="description" content="Magyar, adatvédelmi szempontból tudatos tanári napi segéd: osztályok, dolgozatok, házik, óratervek és kommunikáció." />
+  <title>TanárSegéd PRO v14</title>
+  <meta name="description" content="TanárSegéd PRO v14 – helyi, böngészőben futó tanári napló, jegy- és osztálysegéd." />
   <meta name="theme-color" content="#2563eb" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=13" />
-  <link rel="stylesheet" href="styles.css?v=13" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=14" />
+  <link rel="stylesheet" href="styles.css?v=14" />
 </head>
 <body>
   <div class="app-shell">
     <header class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">TanárSegéd PRO v13</p>
+        <p class="eyebrow">TanárSegéd PRO v14</p>
         <h1>A napi tanári munka egy helyen</h1>
-        <p class="lead">Osztályok, dolgozatok, házik, óratervek és kész kommunikációs sablonok – a böngésződben, saját adatokkal.</p>
-        <div class="hero-actions">
-          <button class="secondary" id="backupBtn" type="button">Mentés letöltése</button>
-          <label class="button-like ghost" for="restoreInput">Mentés visszaállítása</label>
-          <input class="visually-hidden" id="restoreInput" type="file" accept="application/json,.json" />
-          <button class="ghost" id="privacyBtn" type="button">Adatvédelem</button>
-        </div>
+        <p class="lead">Jegyek, órai napló, házi feladatok, tanulói események és óratervek – a saját böngésződben tárolva.</p>
+        <div class="hero-actions"><button class="secondary" id="feedbackBtn" type="button">Véleményt küldök</button><button class="ghost" id="privacyBtn" type="button">Adatvédelem</button></div>
       </div>
-      <div class="hero-card">
-        <span class="hero-number" id="heroClassCount">0</span>
-        <span class="hero-label">aktív osztály</span>
-        <div class="hero-mini"><strong id="heroStudentCount">0</strong><small>aktív tanuló</small></div>
-      </div>
+      <div class="hero-card"><span class="hero-number" id="heroClassCount">0</span><span class="hero-label">aktív osztály</span><div class="hero-mini"><strong id="heroStudentCount">0</strong><small>aktív tanuló</small></div></div>
     </header>
 
-    <nav class="tabs" aria-label="TanárSegéd menü">
+    <nav class="tabs desktop-tabs" aria-label="TanárSegéd főmenü">
       <button class="tab active" data-tab="today" type="button">Ma</button>
-      <button class="tab" data-tab="classes" type="button">Osztályok</button>
-      <button class="tab" data-tab="assessments" type="button">Dolgozatok</button>
+      <button class="tab" data-tab="assessments" type="button">Jegyek</button>
+      <button class="tab" data-tab="logs" type="button">Órai napló</button>
       <button class="tab" data-tab="homework" type="button">Házi feladatok</button>
-      <button class="tab" data-tab="lesson" type="button">Óraterv</button>
-      <button class="tab" data-tab="texts" type="button">Üzenetek</button>
-      <button class="tab" data-tab="tools" type="button">Órai eszközök</button>
+      <button class="tab" data-tab="classes" type="button">Tanulók</button>
+      <button class="tab" data-tab="lesson" type="button">Óravázlat</button>
+      <button class="tab" data-tab="texts" type="button">Szövegek</button>
+      <button class="tab" data-tab="tools" type="button">Tanári eszközök</button>
+      <button class="tab" data-tab="backup" type="button">Adatmentés</button>
     </nav>
+
+    <header class="mobile-header">
+      <div><strong>TanárSegéd PRO v14</strong><span id="mobilePageTitle">Ma</span></div>
+      <button id="mobileMenuBtn" class="menu-toggle" type="button" aria-label="Menü megnyitása" aria-expanded="false" aria-controls="mobileMenu"><span></span><span></span><span></span></button>
+    </header>
+    <div id="mobileOverlay" class="mobile-overlay" aria-hidden="true"></div>
+    <aside id="mobileMenu" class="mobile-menu" aria-label="Mobil menü" aria-hidden="true">
+      <div class="mobile-menu-head"><strong>TanárSegéd PRO v14</strong><button id="mobileMenuClose" class="icon-button" type="button" aria-label="Menü bezárása">×</button></div>
+      <div class="mobile-nav">
+        <button class="mobile-tab active" data-tab="today" type="button">Ma</button><button class="mobile-tab" data-tab="assessments" type="button">Jegyek</button><button class="mobile-tab" data-tab="logs" type="button">Órai napló</button><button class="mobile-tab" data-tab="homework" type="button">Házi feladatok</button><button class="mobile-tab" data-tab="classes" type="button">Tanulók</button><button class="mobile-tab" data-tab="lesson" type="button">Óravázlat</button><button class="mobile-tab" data-tab="texts" type="button">Szövegek</button><button class="mobile-tab" data-tab="tools" type="button">Tanári eszközök</button><button class="mobile-tab" data-tab="backup" type="button">Adatmentés</button>
+      </div>
+    </aside>
 
     <main>
       <section class="tab-panel active" id="tab-today">
         <div class="grid">
-          <section class="panel wide dashboard-top">
-            <div>
-              <p class="section-kicker" id="todayDate"></p>
-              <h2>Mai áttekintő</h2>
-              <p>Válassz egy aktív osztályt; a program ezt használja a többi modulban is.</p>
-            </div>
-            <label class="inline-select">Aktív osztály <select id="globalClassSelect"></select></label>
-          </section>
-          <section class="panel"><h2>Nyitott házik</h2><div class="metric" id="metricHomeworks">0</div><p class="muted">Közelgő vagy határidő nélküli feladat.</p></section>
-          <section class="panel"><h2>Mentett óratervek</h2><div class="metric" id="metricLessons">0</div><p class="muted">Az aktív osztályhoz tartozó tervek.</p></section>
-          <section class="panel"><h2>Értékelésre vár</h2><div class="metric" id="metricMissingScores">0</div><p class="muted">Még pont nélkül álló tanuló az aktív dolgozatban.</p></section>
-          <section class="panel wide">
-            <div class="panel-title"><div><h2>Következő órák és határidők</h2><p>A mentett óratervekből és házikból.</p></div><button class="secondary go-tab" data-go="lesson" type="button">Új óraterv</button></div>
-            <div class="timeline" id="todayTimeline"></div>
-          </section>
-          <section class="panel wide">
-            <div class="panel-title"><div><h2>Gyors teendők</h2><p>Rövid saját emlékeztetők, csak ezen az eszközön tárolva.</p></div></div>
-            <form class="quick-task-form" id="taskForm"><input id="taskText" type="text" maxlength="180" placeholder="pl. Javítani a 7.B dolgozatait" required /><input id="taskDate" type="date" /><button type="submit">Hozzáadás</button></form>
-            <div class="task-list" id="taskList"></div>
-          </section>
-        </div>
-      </section>
-
-      <section class="tab-panel" id="tab-classes">
-        <div class="grid">
-          <section class="panel">
-            <h2>Új osztály</h2>
-            <p class="mb">Ezt a listát használhatod dolgozatnál, házinál és csoportbontásnál is.</p>
-            <div class="form-grid">
-              <label>Osztály neve<input id="newClassName" type="text" placeholder="pl. 7.B" /></label>
-              <label>Alapértelmezett tantárgy<input id="newClassSubject" type="text" placeholder="pl. matematika" /></label>
-              <button id="addClassBtn" type="button">Osztály létrehozása</button>
-            </div>
-          </section>
-          <section class="panel"><h2>Osztályaim</h2><div class="saved-list" id="classList"></div></section>
-          <section class="panel wide" id="classEditor">
-            <div class="panel-title"><div><h2 id="classEditorTitle">Osztály kezelése</h2><p>Diákokat soronként, vagy CSV-fájlból is hozzáadhatsz.</p></div><button class="danger" id="deleteClassBtn" type="button">Osztály törlése</button></div>
-            <div class="form-grid three">
-              <label>Osztály neve<input id="editClassName" type="text" /></label>
-              <label>Alapértelmezett tantárgy<input id="editClassSubject" type="text" /></label>
-              <div class="align-end"><button class="secondary" id="saveClassBtn" type="button">Adatok mentése</button></div>
-            </div>
-            <div class="roster-import">
-              <label>Tanulónevek beillesztése<textarea id="studentPaste" rows="5" placeholder="Nagy Anna&#10;Kiss Péter&#10;vagy: Nagy Anna; Kiss Péter"></textarea></label>
-              <div class="roster-actions"><button id="addStudentsBtn" type="button">Tanulók hozzáadása</button><label class="button-like secondary" for="rosterImportInput">CSV import</label><input class="visually-hidden" id="rosterImportInput" type="file" accept=".csv,text/csv" /><small>A név legyen az első oszlopban. Az ismétlődő nevek kimaradnak.</small></div>
-            </div>
-            <div class="table-wrap"><table><thead><tr><th>Név</th><th>Aktív</th><th></th></tr></thead><tbody id="rosterRows"></tbody></table></div>
-          </section>
+          <section class="panel wide dashboard-top"><div><p class="section-kicker" id="todayDate"></p><h2>Mai áttekintő</h2><p>Az aktív osztály adatai alapján.</p></div><label class="inline-select">Aktív osztály<select id="globalClassSelect"></select></label></section>
+          <section class="panel"><h2>Mai órák</h2><div class="metric" id="metricLessons">0</div><p class="muted">Ma megtartott vagy tervezett naplóbejegyzés.</p></section>
+          <section class="panel"><h2>Ma esedékes házik</h2><div class="metric" id="metricHomeworks">0</div><p class="muted">Mai határidejű, még nyitott feladat.</p></section>
+          <section class="panel"><h2>Értékelésre vár</h2><div class="metric" id="metricMissingScores">0</div><p class="muted">Pont nélkül álló tanuló az aktív dolgozatban.</p></section>
+          <section class="panel wide"><div class="panel-title"><div><h2>Gyors műveletek</h2><p>Ugorj közvetlenül az új bejegyzéshez.</p></div><div class="actions"><button class="go-tab" data-go="logs" type="button">Új órai napló</button><button class="secondary go-tab" data-go="homework" type="button">Új házi</button><button class="secondary go-tab" data-go="assessments" type="button">Új dolgozat</button><button class="secondary go-tab" data-go="classes" type="button">Új tanulói esemény</button></div></div></section>
+          <section class="panel"><h2>Legutóbbi dolgozat</h2><div id="latestAssessment" class="latest-card"></div></section>
+          <section class="panel"><h2>Legutóbbi órai napló</h2><div id="latestLog" class="latest-card"></div></section>
+          <section class="panel"><h2>Legutóbbi tanulói esemény</h2><div id="latestEvent" class="latest-card"></div></section>
+          <section class="panel wide"><div class="panel-title"><div><h2>Közelgő határidők és órák</h2><p>Mentett házikból, óratervekből és naplókból.</p></div></div><div class="timeline" id="todayTimeline"></div></section>
+          <section class="panel wide"><div class="panel-title"><div><h2>Gyors teendők</h2><p>Rövid saját emlékeztetők, csak ezen az eszközön tárolva.</p></div></div><form class="quick-task-form" id="taskForm"><input id="taskText" type="text" maxlength="180" placeholder="pl. Javítani a 7.B dolgozatait" required /><input id="taskDate" type="date" /><button type="submit">Hozzáadás</button></form><div class="task-list" id="taskList"></div></section>
         </div>
       </section>
 
       <section class="tab-panel" id="tab-assessments">
         <div class="grid">
-          <section class="panel wide">
-            <div class="panel-title"><div><h2>Dolgozat adatai</h2><p>Pontozás, jegyhatárok és osztályszintű összesítés.</p></div><div class="actions"><button class="secondary" id="newAssessmentBtn" type="button">Új dolgozat</button><button id="saveAssessmentBtn" type="button">Dolgozat mentése</button></div></div>
-            <div class="form-grid four">
-              <label>Osztály<select id="assessmentClass"></select></label>
-              <label>Dolgozat neve<input id="assessmentTitle" type="text" placeholder="pl. Törtek témazáró" /></label>
-              <label>Tantárgy<input id="assessmentSubject" type="text" placeholder="pl. matematika" /></label>
-              <label>Dátum<input id="assessmentDate" type="date" /></label>
-              <label>Max. pontszám<input id="assessmentMaxPoints" type="number" min="1" step="0.5" value="100" /></label>
-            </div>
-          </section>
+          <section class="panel wide"><div class="panel-title"><div><h2>Dolgozat adatai</h2><p>Pontozás, jegyhatárok és osztályszintű összesítés.</p></div><div class="actions"><button class="secondary" id="newAssessmentBtn" type="button">Új dolgozat</button><button id="saveAssessmentBtn" type="button">Dolgozat mentése</button></div></div><div class="form-grid four"><label>Osztály<select id="assessmentClass"></select></label><label>Dolgozat neve<input id="assessmentTitle" type="text" placeholder="pl. Törtek témazáró" /></label><label>Tantárgy<input id="assessmentSubject" type="text" placeholder="pl. matematika" /></label><label>Dátum<input id="assessmentDate" type="date" /></label><label>Max. pontszám<input id="assessmentMaxPoints" type="number" min="1" step="0.5" value="100" /></label></div></section>
           <section class="panel"><div class="panel-title compact"><div><h2>Ponthatárok</h2><p>Jegyhez szükséges százalék.</p></div><button class="ghost" id="resetScaleBtn" type="button">Alapérték</button></div><div class="grade-scale" id="gradeScale"></div></section>
           <section class="panel"><h2>Gyors eredmény</h2><label>Elért pont<input id="quickPoints" type="number" min="0" step="0.5" placeholder="pl. 73" /></label><label>Bónuszpont<input id="quickBonus" type="number" min="0" step="0.5" value="0" /></label><div class="result-card"><span id="quickPercent">–</span><strong id="quickGrade">Jegy: –</strong><small id="quickText">Válassz dolgozatot és írj be pontot.</small></div></section>
-          <section class="panel wide">
-            <div class="panel-title"><div><h2>Osztálylista</h2><p>Pont, bónusz és státusz szerkeszthető. A 100% fölötti eredményt külön jelöli a program.</p></div><div class="actions"><button class="secondary" id="exportCsvBtn" type="button">CSV export</button><button class="secondary" id="copySummaryBtn" type="button">Összesítés másolása</button><button class="secondary" id="printAssessmentBtn" type="button">Nyomtatás</button></div></div>
-            <div class="table-wrap"><table class="assessment-table"><thead><tr><th>Név</th><th>Pont</th><th>Bónusz</th><th>Státusz</th><th>Százalék</th><th>Jegy</th><th>Visszajelzés</th></tr></thead><tbody id="assessmentRows"></tbody></table></div>
-          </section>
-          <section class="panel"><h2>Dolgozat elemzése</h2><div class="stats" id="assessmentStats"></div></section>
-          <section class="panel"><h2>Mentett dolgozatok</h2><div class="saved-list" id="assessmentList"></div></section>
+          <section class="panel wide"><div class="panel-title"><div><h2>Osztálylista</h2><p>Pont, bónusz és státusz szerkeszthető.</p></div><div class="actions"><button class="secondary" id="exportCsvBtn" type="button">CSV export</button><button class="secondary" id="copySummaryBtn" type="button">Összesítés másolása</button><button class="secondary" id="printAssessmentBtn" type="button">Nyomtatás</button></div></div><div class="table-wrap"><table class="assessment-table"><thead><tr><th>Név</th><th>Pont</th><th>Bónusz</th><th>Státusz</th><th>Százalék</th><th>Jegy</th><th>Visszajelzés</th></tr></thead><tbody id="assessmentRows"></tbody></table></div></section>
+          <section class="panel"><h2>Dolgozat elemzése</h2><div class="stats" id="assessmentStats"></div></section><section class="panel"><h2>Mentett dolgozatok</h2><div class="saved-list" id="assessmentList"></div></section>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-logs">
+        <div class="grid">
+          <section class="panel wide"><div class="panel-title"><div><h2>Órai napló</h2><p>Rögzítsd az óra lényegét, a hiányzókat és a következő óra teendőit.</p></div><button class="secondary" id="newLogBtn" type="button">Új bejegyzés</button></div><div class="form-grid three"><label>Dátum<input id="logDate" type="date" /></label><label>Osztály<select id="logClass"></select></label><label>Tantárgy<input id="logSubject" type="text" /></label><label>Óra témája<input id="logTopic" type="text" /></label><label>Óra állapota<select id="logStatus"><option value="megtartva">Megtartva</option><option value="elmaradt">Elmaradt</option><option value="helyettesites">Helyettesítés</option></select></label><label>Hiányzó tanulók<input id="logAbsentees" type="text" placeholder="pl. Minta Anna, Példa Béla" /></label></div><div class="form-grid"><label>Mit vettünk ma?<textarea id="logContent" rows="4" placeholder="A mai óra tananyaga, feladatai."></textarea></label><label>Házi feladat<textarea id="logHomework" rows="3"></textarea></label><label>Kik feleltek?<input id="logResponders" type="text" /></label><label>Megjegyzés a következő órára<textarea id="logNote" rows="3"></textarea></label><div class="actions"><button id="saveLogBtn" type="button">Naplóbejegyzés mentése</button><button class="secondary" data-copy="logOutput" type="button">Összefoglaló másolása</button></div></div><textarea id="logOutput" class="output small-output" readonly>ÓRAI NAPLÓ</textarea></section>
+          <section class="panel wide"><div class="panel-title"><div><h2>Mentett naplóbejegyzések</h2><p>Keresés és szűrés dátum, osztály és tantárgy alapján.</p></div></div><div class="filter-grid"><label>Dátum<input id="logFilterDate" type="date" /></label><label>Osztály<select id="logFilterClass"></select></label><label>Tantárgy<input id="logFilterSubject" type="search" placeholder="pl. matematika" /></label><button class="ghost" id="clearLogFiltersBtn" type="button">Szűrők törlése</button></div><div class="saved-list" id="logList"></div></section>
         </div>
       </section>
 
       <section class="tab-panel" id="tab-homework">
+        <div class="grid"><section class="panel"><h2>Házi feladat</h2><p class="mb">Menthető feladat és egységes, másolható tájékoztató.</p><div class="form-grid"><label>Osztály<select id="hwClass"></select></label><label>Tantárgy<input id="hwSubject" type="text" /></label><label>Határidő<input id="hwDeadline" type="date" /></label><label>Feladat<textarea id="hwText" rows="5" placeholder="pl. Tankönyv 45. oldal, 3–6. feladat."></textarea></label><label>Megjegyzés<textarea id="hwNote" rows="3" placeholder="pl. Aki hiányzott, annak is pótolnia kell."></textarea></label><button id="saveHomeworkBtn" type="button">Házi mentése</button></div></section><section class="panel"><div class="panel-title compact"><div><h2>Mentett házik</h2><p>Megnyitható, másolható vagy lezárható.</p></div><button class="secondary" id="clearDoneHomeworksBtn" type="button">Lezártak törlése</button></div><div class="saved-list" id="homeworkList"></div></section><section class="panel wide output-panel"><div class="panel-title compact"><div><h2>Másolható üzenet</h2><p>E-naplóba, csoportba vagy Messengerbe.</p></div><button class="secondary" data-copy="homeworkMessage" type="button">Másolás</button></div><textarea id="homeworkMessage" class="output small-output" readonly></textarea></section></div>
+      </section>
+
+      <section class="tab-panel" id="tab-classes">
         <div class="grid">
-          <section class="panel"><h2>Házi feladat</h2><p class="mb">Menthető feladat és egységes, másolható tájékoztató.</p><div class="form-grid"><label>Osztály<select id="hwClass"></select></label><label>Tantárgy<input id="hwSubject" type="text" /></label><label>Határidő<input id="hwDeadline" type="date" /></label><label>Feladat<textarea id="hwText" rows="5" placeholder="pl. Tankönyv 45. oldal, 3–6. feladat."></textarea></label><label>Megjegyzés<textarea id="hwNote" rows="3" placeholder="pl. Aki hiányzott, annak is pótolnia kell."></textarea></label><button id="saveHomeworkBtn" type="button">Házi mentése</button></div></section>
-          <section class="panel"><div class="panel-title compact"><div><h2>Mentett házik</h2><p>Megnyitható, másolható vagy lezárható.</p></div><button class="secondary" id="clearDoneHomeworksBtn" type="button">Lezártak törlése</button></div><div class="saved-list" id="homeworkList"></div></section>
-          <section class="panel wide output-panel"><div class="panel-title compact"><div><h2>Másolható üzenet</h2><p>E-naplóba, csoportba vagy Messengerbe.</p></div><button class="secondary" data-copy="homeworkMessage" type="button">Másolás</button></div><textarea id="homeworkMessage" class="output small-output" readonly></textarea></section>
+          <section class="panel"><h2>Új osztály</h2><p class="mb">A névsor a Jegyek, Napló, Események és csoportbontás oldalakon is használható.</p><div class="form-grid"><label>Osztály neve<input id="newClassName" type="text" placeholder="pl. 7.B" /></label><label>Alapértelmezett tantárgy<input id="newClassSubject" type="text" placeholder="pl. matematika" /></label><button id="addClassBtn" type="button">Osztály létrehozása</button></div></section><section class="panel"><h2>Osztályaim</h2><div class="saved-list" id="classList"></div></section>
+          <section class="panel wide" id="classEditor"><div class="panel-title"><div><h2 id="classEditorTitle">Osztály kezelése</h2><p>Diákokat soronként vagy CSV-fájlból is hozzáadhatsz.</p></div><button class="danger" id="deleteClassBtn" type="button">Osztály törlése</button></div><div class="form-grid three"><label>Osztály neve<input id="editClassName" type="text" /></label><label>Alapértelmezett tantárgy<input id="editClassSubject" type="text" /></label><div class="align-end"><button class="secondary" id="saveClassBtn" type="button">Adatok mentése</button></div></div><div class="roster-import"><label>Tanulónevek beillesztése<textarea id="studentPaste" rows="5" placeholder="Nagy Anna&#10;Kiss Péter&#10;vagy: Nagy Anna; Kiss Péter"></textarea></label><div class="roster-actions"><button id="addStudentsBtn" type="button">Tanulók hozzáadása</button><label class="button-like secondary" for="rosterImportInput">CSV import</label><input class="visually-hidden" id="rosterImportInput" type="file" accept=".csv,text/csv" /><small>A név legyen az első oszlopban. Az ismétlődő nevek kimaradnak.</small></div></div><div class="table-wrap"><table><thead><tr><th>Név</th><th>Aktív</th><th></th></tr></thead><tbody id="rosterRows"></tbody></table></div></section>
+          <section class="panel wide"><div class="panel-title"><div><h2>Tanulói mini adatlap</h2><p>Dolgozateredmények és rögzített események alapján.</p></div><button class="secondary" id="copyStudentSummaryBtn" type="button">Összefoglaló másolása</button></div><div class="filter-grid"><label>Osztály<select id="studentProfileClass"></select></label><label>Keresés név szerint<input id="studentSearch" type="search" placeholder="Tanuló neve" /></label><label>Tanuló<select id="studentProfileSelect"></select></label></div><div id="studentProfileOutput" class="student-profile"></div></section>
+          <section class="panel wide"><div class="panel-title"><div><h2>Tanulói események</h2><p>Csak az alkalmazásban megadott, rövid események kerülnek tárolásra.</p></div><button class="secondary" id="newEventBtn" type="button">Új esemény</button></div><div class="form-grid three"><label>Dátum<input id="eventDate" type="date" /></label><label>Osztály<select id="eventClass"></select></label><label>Tanuló<select id="eventStudent"></select></label><label>Esemény típusa<select id="eventType"><option value="hianyzott">Hiányzott</option><option value="nincs_hazi">Nem volt házi feladata</option><option value="nincs_felszereles">Nem volt felszerelése</option><option value="felelt">Felelt</option><option value="dicseret">Dicséretet kapott</option><option value="figyelmeztetes">Figyelmeztetést kapott</option><option value="egyeb">Egyéb megjegyzés</option></select></label><label class="wide-label">Megjegyzés<textarea id="eventNote" rows="3" placeholder="Rövid, tárgyszerű megjegyzés."></textarea></label></div><div class="actions"><button id="saveEventBtn" type="button">Esemény mentése</button><button class="secondary" data-copy="eventOutput" type="button">Összesítő másolása</button></div><textarea id="eventOutput" class="output small-output" readonly>TANULÓI ESEMÉNYEK</textarea></section>
+          <section class="panel wide"><div class="panel-title"><div><h2>Mentett események</h2><p>Szűrhető osztály, tanuló, típus és dátum szerint.</p></div></div><div class="filter-grid"><label>Dátum<input id="eventFilterDate" type="date" /></label><label>Osztály<select id="eventFilterClass"></select></label><label>Tanuló<select id="eventFilterStudent"></select></label><label>Típus<select id="eventFilterType"><option value="">Minden típus</option><option value="hianyzott">Hiányzott</option><option value="nincs_hazi">Nem volt házi feladata</option><option value="nincs_felszereles">Nem volt felszerelése</option><option value="felelt">Felelt</option><option value="dicseret">Dicséretet kapott</option><option value="figyelmeztetes">Figyelmeztetést kapott</option><option value="egyeb">Egyéb megjegyzés</option></select></label><button class="ghost" id="clearEventFiltersBtn" type="button">Szűrők törlése</button></div><div class="saved-list" id="eventList"></div></section>
         </div>
       </section>
 
       <section class="tab-panel" id="tab-lesson">
-        <div class="grid">
-          <section class="panel"><h2>Óraterv-készítő</h2><p class="mb">A szakaszok összege mindig pontosan a megadott órakeret lesz.</p><div class="form-grid"><label>Osztály<select id="lessonClass"></select></label><label>Tantárgy<input id="lessonSubject" type="text" /></label><label>Dátum<input id="lessonDate" type="date" /></label><label>Óra témája<input id="lessonTopic" type="text" placeholder="pl. emésztőrendszer" /></label><div class="form-grid two"><label>Időtartam percben<input id="lessonMinutes" type="number" min="15" max="120" value="45" /></label><label>Fő cél / készség<input id="lessonGoal" type="text" placeholder="pl. lényegkiemelés" /></label></div><label>Differenciálás<textarea id="lessonDifferentiation" rows="3" placeholder="pl. páros segítség, gyorsabb tanulóknak plusz feladat"></textarea></label><label>Eszközök és értékelés<textarea id="lessonResources" rows="3" placeholder="pl. projektor, munkalap, kilépőkártya"></textarea></label><label>Házi feladat<input id="lessonHomework" type="text" placeholder="pl. Rövid gyakorlás a füzetből" /></label><div class="actions"><button id="generateLessonBtn" type="button">Óraterv készítése</button><button class="secondary" id="saveLessonBtn" type="button">Óraterv mentése</button></div></div></section>
-          <section class="panel output-panel"><div class="panel-title compact"><div><h2>Szerkeszthető óraterv</h2><p>Mentés előtt szabadon átírható.</p></div><div class="actions"><button class="secondary" data-copy="lessonOutput" type="button">Másolás</button><button class="secondary" id="printLessonBtn" type="button">Nyomtatás</button></div></div><textarea id="lessonOutput" class="output">Itt jelenik meg a szerkeszthető óraterv.</textarea></section>
-          <section class="panel wide"><h2>Mentett óratervek</h2><div class="saved-list" id="lessonList"></div></section>
-        </div>
+        <div class="grid"><section class="panel"><h2>Óravázlat-készítő</h2><p class="mb">A szakaszok összege mindig pontosan a megadott órakeret lesz.</p><div class="form-grid"><label>Osztály<select id="lessonClass"></select></label><label>Tantárgy<input id="lessonSubject" type="text" /></label><label>Dátum<input id="lessonDate" type="date" /></label><label>Óra témája<input id="lessonTopic" type="text" placeholder="pl. emésztőrendszer" /></label><div class="form-grid two"><label>Időtartam percben<input id="lessonMinutes" type="number" min="15" max="120" value="45" /></label><label>Fő cél / készség<input id="lessonGoal" type="text" placeholder="pl. lényegkiemelés" /></label></div><label>Differenciálás<textarea id="lessonDifferentiation" rows="3" placeholder="pl. páros segítség, gyorsabb tanulóknak plusz feladat"></textarea></label><label>Eszközök és értékelés<textarea id="lessonResources" rows="3" placeholder="pl. projektor, munkalap, kilépőkártya"></textarea></label><label>Házi feladat<input id="lessonHomework" type="text" placeholder="pl. Rövid gyakorlás a füzetből" /></label><div class="actions"><button id="generateLessonBtn" type="button">Óravázlat készítése</button><button class="secondary" id="saveLessonBtn" type="button">Óravázlat mentése</button></div></div></section><section class="panel output-panel"><div class="panel-title compact"><div><h2>Szerkeszthető óravázlat</h2><p>Mentés előtt szabadon átírható.</p></div><div class="actions"><button class="secondary" data-copy="lessonOutput" type="button">Másolás</button><button class="secondary" id="printLessonBtn" type="button">Nyomtatás</button></div></div><textarea id="lessonOutput" class="output">Itt jelenik meg a szerkeszthető óravázlat.</textarea></section><section class="panel wide"><h2>Mentett óravázlatok</h2><div class="saved-list" id="lessonList"></div></section></div>
       </section>
 
       <section class="tab-panel" id="tab-texts">
-        <div class="grid">
-          <section class="panel"><h2>Értékelő és szülői üzenet</h2><p class="mb">A hangnem a kész szöveget is ténylegesen módosítja.</p><div class="form-grid"><label>Osztály<select id="textClass"></select></label><label>Tanuló<select id="txtStudent"></select></label><label>Helyzet / téma<input id="txtTopic" type="text" placeholder="pl. dolgozat eredménye" /></label><label>Részletek<textarea id="txtDetails" rows="5" placeholder="pl. sokat fejlődött, de rendszeres gyakorlás kell"></textarea></label><div class="form-grid two"><label>Szöveg típusa<select id="txtType"><option value="ertekeles">Diákértékelés</option><option value="szulo">Szülői üzenet</option><option value="dicseret">Dicséret</option><option value="figyelmeztetes">Figyelmeztetés</option><option value="hianyzo_hazi">Hiányzó házi</option></select></label><label>Hangnem<select id="txtTone"><option value="baratsagos">Barátságos</option><option value="hivatalos">Hivatalos</option><option value="batorito" selected>Bátorító</option></select></label></div><label>Következő lépés / kérés<input id="txtAction" type="text" placeholder="pl. Kérem, a következő hétig pótolja a feladatot."></label><button id="generateTextBtn" type="button">Szöveg készítése</button></div></section>
-          <section class="panel output-panel"><div class="panel-title compact"><div><h2>Szerkeszthető szöveg</h2><p>Átnézés után másolható.</p></div><button class="secondary" data-copy="textOutput" type="button">Másolás</button></div><textarea id="textOutput" class="output">Itt jelenik meg a kész szöveg.</textarea></section>
-        </div>
+        <div class="grid"><section class="panel"><h2>Értékelő és szülői üzenet</h2><p class="mb">A hangnem a kész szöveget is ténylegesen módosítja.</p><div class="form-grid"><label>Osztály<select id="textClass"></select></label><label>Tanuló<select id="txtStudent"></select></label><label>Helyzet / téma<input id="txtTopic" type="text" placeholder="pl. dolgozat eredménye" /></label><label>Részletek<textarea id="txtDetails" rows="5" placeholder="pl. sokat fejlődött, de rendszeres gyakorlás kell"></textarea></label><div class="form-grid two"><label>Szöveg típusa<select id="txtType"><option value="ertekeles">Diákértékelés</option><option value="szulo">Szülői üzenet</option><option value="dicseret">Dicséret</option><option value="figyelmeztetes">Figyelmeztetés</option><option value="hianyzo_hazi">Hiányzó házi</option></select></label><label>Hangnem<select id="txtTone"><option value="baratsagos">Barátságos</option><option value="hivatalos">Hivatalos</option><option value="batorito" selected>Bátorító</option></select></label></div><label>Következő lépés / kérés<input id="txtAction" type="text" placeholder="pl. Kérem, a következő hétig pótolja a feladatot."></label><div class="actions"><button id="generateTextBtn" type="button">Szöveg készítése</button><button class="secondary" id="saveTextBtn" type="button">Szöveg mentése</button></div></div></section><section class="panel output-panel"><div class="panel-title compact"><div><h2>Szerkeszthető szöveg</h2><p>Átnézés után másolható.</p></div><button class="secondary" data-copy="textOutput" type="button">Másolás</button></div><textarea id="textOutput" class="output">Itt jelenik meg a kész szöveg.</textarea></section><section class="panel wide"><h2>Mentett szövegek</h2><div class="saved-list" id="textList"></div></section></div>
       </section>
 
       <section class="tab-panel" id="tab-tools">
-        <div class="grid">
-          <section class="panel"><h2>Méltányos felelőválasztó</h2><p class="mb">Az aktív osztályból előbb a ritkábban választott tanulók közül sorsol.</p><div class="form-grid"><label>Osztály<select id="toolsClass"></select></label><label>Feladat / cél<input id="classTask" type="text" placeholder="pl. ismétlés" /></label><div class="actions"><button id="pickRandomBtn" type="button">Véletlen felelő</button><button class="secondary" id="resetCalledBtn" type="button">Felelőelőzmények törlése</button></div></div></section>
-          <section class="panel"><h2>Csoportbontó</h2><p class="mb">Közel azonos létszámú csoportok; megadhatók elkülönítendő párok is.</p><div class="form-grid"><label>Csoportok száma<input id="groupCount" type="number" min="2" max="10" value="3" /></label><label>Elkülönítendő párok<textarea id="avoidPairs" rows="4" placeholder="Nagy Anna - Kiss Péter&#10;Tóth Bence - Varga Lili"></textarea></label><button class="secondary" id="makeGroupsBtn" type="button">Csoportok készítése</button></div></section>
-          <section class="panel wide output-panel"><div class="panel-title compact"><div><h2>Eredmény</h2><p>Másolható lista.</p></div><button class="secondary" data-copy="toolsOutput" type="button">Másolás</button></div><textarea id="toolsOutput" class="output small-output" readonly>Itt jelenik meg az eredmény.</textarea></section>
-        </div>
+        <div class="grid"><section class="panel"><h2>Méltányos felelőválasztó</h2><p class="mb">Az aktív osztályból előbb a ritkábban választott tanulók közül sorsol.</p><div class="form-grid"><label>Osztály<select id="toolsClass"></select></label><label>Feladat / cél<input id="classTask" type="text" placeholder="pl. ismétlés" /></label><div class="actions"><button id="pickRandomBtn" type="button">Véletlen felelő</button><button class="secondary" id="resetCalledBtn" type="button">Felelőelőzmények törlése</button></div></div></section><section class="panel"><h2>Csoportbontó</h2><p class="mb">Közel azonos létszámú csoportok; megadhatók elkülönítendő párok is.</p><div class="form-grid"><label>Csoportok száma<input id="groupCount" type="number" min="2" max="10" value="3" /></label><label>Elkülönítendő párok<textarea id="avoidPairs" rows="4" placeholder="Nagy Anna - Kiss Péter&#10;Tóth Bence - Varga Lili"></textarea></label><button class="secondary" id="makeGroupsBtn" type="button">Csoportok készítése</button></div></section><section class="panel wide output-panel"><div class="panel-title compact"><div><h2>Eredmény</h2><p>Másolható lista.</p></div><button class="secondary" data-copy="toolsOutput" type="button">Másolás</button></div><textarea id="toolsOutput" class="output small-output" readonly>Itt jelenik meg az eredmény.</textarea></section></div>
+      </section>
+
+      <section class="tab-panel" id="tab-backup">
+        <div class="grid"><section class="panel wide warning-panel"><p class="section-kicker">Adatmentés</p><h2>Biztonsági mentés és visszaállítás</h2><p>Az adatok ezen az eszközön és ebben a böngészőben tárolódnak. Fontos adatoknál rendszeresen készíts biztonsági mentést.</p></section><section class="panel"><h2>Mentés letöltése</h2><p class="mb">Minden alkalmazásadat JSON-fájlba kerül: dolgozatok, névsorok, házik, óravázlatok, naplók, események, szövegek és beállítások.</p><button id="backupBtn" type="button">Összes adat letöltése</button></section><section class="panel"><h2>Mentés visszatöltése</h2><p class="mb">Csak érvényes TanárSegéd PRO v14 mentés tölthető vissza. A visszaállítás felülírja a jelenlegi helyi adatokat.</p><label class="button-like secondary" for="restoreInput">JSON mentés kiválasztása</label><input class="visually-hidden" id="restoreInput" type="file" accept="application/json,.json" /></section><section class="panel"><h2>Demó adatok</h2><p class="mb">Kitalált nevekkel és mintabejegyzésekkel kipróbálható a teljes v14 működése.</p><button class="secondary" id="demoDataBtn" type="button">Demó adatok betöltése</button></section><section class="panel"><h2>Minden adat törlése</h2><p class="mb">Kétlépcsős megerősítés után törlődik minden v14-es helyi adat. Előtte tölts le mentést.</p><button class="danger" id="clearAllBtn" type="button">Minden adat törlése</button></section></div>
       </section>
     </main>
+    <footer class="privacy-footer">Ez a próbaverzió az adatokat kizárólag a használt böngészőben tárolja. Valódi tanulói adatok használata előtt ellenőrizd az intézményi és adatvédelmi előírásokat.</footer>
   </div>
 
-  <dialog id="privacyDialog"><div class="dialog-content"><div class="panel-title"><div><p class="section-kicker">Adatvédelem</p><h2>Adataid a te kezedben vannak</h2></div><button class="ghost" id="closePrivacyBtn" type="button">Bezárás</button></div><p>A TanárSegéd ebben a változatban minden osztály-, tanuló-, dolgozat- és háziadatot csak ennek a böngészőnek a helyi tárhelyén tárol. Nincs bejelentkezés, szerverre küldés vagy automatikus felhőmentés.</p><p><strong>Javaslat:</strong> rendszeresen tölts le biztonsági mentést, és ha közös vagy iskolai gépen dolgozol, töröld az adatokat használat után. A mentés személyes adatokat tartalmazhat, ezért csak biztonságos helyen tárold.</p></div></dialog>
+  <dialog id="privacyDialog"><div class="dialog-content"><div class="panel-title"><div><p class="section-kicker">Adatvédelem</p><h2>Adataid a te kezedben vannak</h2></div><button class="ghost" id="closePrivacyBtn" type="button">Bezárás</button></div><p>A TanárSegéd PRO v14 minden adatot a böngésző helyi tárhelyén tárol. Nincs bejelentkezés, szerverre küldés vagy automatikus felhőmentés.</p><p><strong>Javaslat:</strong> fontos adatoknál rendszeresen készíts JSON-mentést, és közös gépen ne tárolj valódi tanulói adatokat.</p></div></dialog>
+  <dialog id="demoDialog"><div class="dialog-content"><p class="section-kicker">Demó adatok</p><h2>Hogyan töltsük be a mintát?</h2><p>A demó egy kitalált 7.B osztályt, dolgozatot, házikat, naplókat, eseményeket, óravázlatot és szülői üzenetet tartalmaz.</p><div class="dialog-actions"><button id="demoAppendBtn" type="button">Hozzáadás</button><button class="secondary" id="demoReplaceBtn" type="button">Minden meglévő adat cseréje</button><button class="ghost" id="demoCancelBtn" type="button">Mégse</button></div></div></dialog>
   <div class="toast" id="toast" aria-live="polite"></div>
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

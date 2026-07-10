@@ -1,29 +1,39 @@
-# TanárSegéd PRO v13
+# TanárSegéd PRO v14
 
-Magyar nyelvű, böngészőben futó tanári napi segéd. Nem kér bejelentkezést: az adatok az adott böngésző helyi tárhelyén maradnak.
+Egyszerű, magyar nyelvű tanári segédprogram. Sima HTML, CSS és JavaScript alapú, bejelentkezés és külső szerver nélkül fut. Az adatok az adott böngésző helyi tárhelyén maradnak.
 
-## Gyors kezdés
+## Funkciók
 
-1. Nyisd meg az `index.html` fájlt Chrome-ban, Edge-ben vagy Firefoxban.
-2. Az **Osztályok** lapon hozd létre az osztályt, majd másold be vagy CSV-ből töltsd fel a névsort.
-3. A **Dolgozatok**, **Házi feladatok**, **Óraterv**, **Üzenetek** és **Órai eszközök** már ugyanezt a közös osztálylistát használják.
-4. Rendszeresen tölts le mentést a fejléc **Mentés letöltése** gombjával.
+- **Ma:** mai órák, esedékes és közelgő házik, legutóbbi dolgozat, napló és tanulói esemény.
+- **Jegyek:** osztálylista, pontok, bónuszpontok, ponthatárok, jegyszámítás, elemzés, CSV-export és nyomtatás.
+- **Órai napló:** óránkénti téma, tananyag, házi, hiányzók, felelők, megjegyzés és óraállapot.
+- **Házi feladatok:** mentés, lezárás és másolható tájékoztató.
+- **Tanulók:** osztály- és névsor-kezelés, CSV-import, tanulói események és mini adatlap.
+- **Óravázlat:** szerkeszthető, menthető óravázlat pontos időkerettel.
+- **Szövegek:** értékelő és szülői üzenetek, menthető szövegekkel.
+- **Tanári eszközök:** méltányos felelőválasztó és csoportbontó.
+- **Adatmentés:** v14-es JSON-mentés, visszaállítás, demó adatok és kétlépcsős adattörlés.
 
-## Fő funkciók
+## Használat
 
-- Közös osztály- és diáktörzs CSV-importtal.
-- Dolgozatkezelés: pontok, bónuszpontok, hiányzó/mentesült állapot, saját ponthatárok, elemzés és CSV-export.
-- Menthető, lezárható házik és másolható tájékoztató.
-- Szerkeszthető, menthető óraterv valós időkerettel, differenciálással és értékelési résszel.
-- Hangnemet ténylegesen figyelembe vevő értékelő- és szülői üzenetsablonok.
-- Méltányos felelőválasztó és csoportbontó elkülönítendő párokkal.
-- Napi áttekintő és személyes teendőlista.
-- JSON biztonsági mentés és visszaállítás.
+1. Csomagold ki a ZIP-fájlt egy tetszőleges mappába.
+2. Nyisd meg az `index.html` fájlt Chrome, Edge vagy Firefox böngészőben.
+3. A **Tanulók** oldalon hozz létre egy osztályt, majd add hozzá vagy CSV-ből töltsd fel a névsort.
+4. A többi modul már ezt a közös osztálylistát használja.
+5. Fontos munka előtt és után készíts mentést az **Adatmentés** oldalon.
+
+## Mentés és adatátvétel
+
+A v14 a saját, `tanarseged_pro_v14` localStorage-kulcsát használja. Első megnyitáskor képes a korábbi v13-as helyi adatokat v14-be másolni; a régi kulcsot nem törli automatikusan.
+
+Az exportált JSON-fájl visszatöltése előtt a program ellenőrzi, hogy valódi TanárSegéd PRO v14 mentésről van-e szó. Hibás fájl esetén nem írja felül az adatokat.
+
+## GitHub Pages feltöltés
+
+Töltsd fel a ZIP gyökerében lévő `index.html`, `styles.css`, `app.js`, `favicon.svg`, `README.md`, `OLVASS_EL.txt` és `CHANGELOG.md` fájlokat egy GitHub-repozitórium főkönyvtárába. A Pages beállításainál válaszd a fő ágat és a `/ (root)` könyvtárat. Az `index.html` lesz a főoldal.
+
+Nincs service worker, `sw.js`, manifest vagy külső API. Frissítés után, ha kell, használj `Ctrl + F5`-öt.
 
 ## Adatvédelem
 
-Ez a kiadás nem küldi szerverre a személyes adatokat, viszont a böngésző helyi tárolójában jelennek meg. A mentés tanulóneveket is tartalmazhat, ezért azt biztonságos helyen tartsd. Nyilvános teszteléshez ne használj valódi tanulói adatokat.
-
-## Közzététel GitHub Pages-en
-
-Töltsd fel az `index.html`, `styles.css`, `app.js` és `favicon.svg` fájlokat egy GitHub-repozitórium főkönyvtárába, majd a Pages beállításánál válaszd a fő ágat és a `/ (root)` könyvtárat. Új verzió után a böngészőben `Ctrl + F5` frissítés javasolt.
+Ez a próbaverzió az adatokat kizárólag a használt böngészőben tárolja. Valódi tanulói adatok használata előtt ellenőrizd az intézményi és adatvédelmi előírásokat. Közös gépen ne hagyj érzékeny adatokat, és rendszeresen tölts le biztonsági mentést.

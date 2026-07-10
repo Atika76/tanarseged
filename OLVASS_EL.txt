@@ -1,13 +1,12 @@
-TanárSegéd PRO v13 – megosztható változat
+TanárSegéd PRO v14
 
-Használat:
-1. Csomagold ki a ZIP-et egy tetszőleges mappába.
+1. Csomagold ki a ZIP-fájlt egy saját mappába.
 2. Nyisd meg az index.html fájlt Chrome, Edge vagy Firefox böngészőben.
-3. Először az Osztályok menüben hozz létre egy tesztosztályt és névsort.
-4. A fejléc Mentés letöltése gombjával készíts rendszeres biztonsági mentést.
+3. Először a Tanulók menüben hozz létre osztályt és töltsd fel a névsort.
+4. A fejléc Véleményt küldök gombjához az app.js első soraiban állítható be a FEEDBACK_URL.
+5. Az Adatmentés oldalon készíts rendszeres JSON-mentést.
 
-Fontos adatvédelmi szabály:
-- Nyilvános teszteléshez ne valódi tanulóneveket és ne érzékeny adatokat használj.
+Fontos:
+- A program nem használ szervert, a megadott adatok a helyi böngészőben maradnak.
+- Nyilvános bemutatóhoz vagy teszteléshez ne használj valódi tanulói adatokat.
 - A böngészőadatok törlése a helyi adatokat is törölheti, ezért a mentés fontos.
-
-Facebookos teszteléshez a FACEBOOK_POSZT.txt fájlban találsz kész szöveget.
