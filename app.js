@@ -1,4 +1,6 @@
-const DATA_KEY = 'tanarseged_pro_v13';
+const FEEDBACK_URL = "";
+const DATA_KEY = 'tanarseged_pro_v14';
+const V13_DATA_KEY = 'tanarseged_pro_v13';
 const LEGACY_KEY = 'tanarseged_pro_v12_clean';
 const DEFAULT_SCALE = [{ grade: 5, min: 85 }, { grade: 4, min: 70 }, { grade: 3, min: 55 }, { grade: 2, min: 40 }, { grade: 1, min: 0 }];
 const $ = id => document.getElementById(id);
@@ -8,7 +10,7 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
 function emptyData(){
-  return { version: 13, activeClassId: '', activeAssessmentId: '', classes: [], assessments: [], homeworks: [], lessons: [], tasks: [], calledHistory: {} };
+  return { version: 14, activeClassId: '', activeAssessmentId: '', activeLogId: '', activeStudentEventId: '', classes: [], assessments: [], homeworks: [], lessons: [], lessonLogs: [], studentEvents: [], texts: [], tasks: [], calledHistory: {}, settings: {} };
 }
 
 let data = emptyData();
@@ -81,20 +83,31 @@ function normalizeData(candidate){
   })) : [];
   safe.homeworks = Array.isArray(candidate.homeworks) ? candidate.homeworks.map(raw => ({ id: raw.id || uid(), classId: raw.classId || '', subject: cleanString(raw.subject), deadline: raw.deadline || '', text: cleanString(raw.text), note: cleanString(raw.note), done: Boolean(raw.done), createdAt: raw.createdAt || new Date().toISOString() })) : [];
   safe.lessons = Array.isArray(candidate.lessons) ? candidate.lessons.map(raw => ({ id: raw.id || uid(), classId: raw.classId || '', subject: cleanString(raw.subject), topic: cleanString(raw.topic), date: raw.date || '', output: String(raw.output || ''), createdAt: raw.createdAt || new Date().toISOString() })) : [];
+  safe.lessonLogs = Array.isArray(candidate.lessonLogs) ? candidate.lessonLogs.map(raw => ({ id: raw.id || uid(), date: /^\d{4}-\d{2}-\d{2}$/.test(raw.date || '') ? raw.date : todayIso(), classId: raw.classId || '', subject: cleanString(raw.subject), topic: cleanString(raw.topic), content: cleanString(raw.content), homework: cleanString(raw.homework), absentees: cleanString(raw.absentees), responders: cleanString(raw.responders), note: cleanString(raw.note), status: ['megtartva','elmaradt','helyettesites'].includes(raw.status) ? raw.status : 'megtartva', createdAt: raw.createdAt || new Date().toISOString(), updatedAt: raw.updatedAt || '' })) : [];
+  safe.studentEvents = Array.isArray(candidate.studentEvents) ? candidate.studentEvents.map(raw => ({ id: raw.id || uid(), date: /^\d{4}-\d{2}-\d{2}$/.test(raw.date || '') ? raw.date : todayIso(), classId: raw.classId || '', studentId: raw.studentId || '', studentName: cleanString(raw.studentName), type: ['hianyzott','nincs_hazi','nincs_felszereles','felelt','dicseret','figyelmeztetes','egyeb'].includes(raw.type) ? raw.type : 'egyeb', note: cleanString(raw.note), createdAt: raw.createdAt || new Date().toISOString(), updatedAt: raw.updatedAt || '' })) : [];
+  safe.texts = Array.isArray(candidate.texts) ? candidate.texts.map(raw => ({ id: raw.id || uid(), classId: raw.classId || '', studentId: raw.studentId || '', title: cleanString(raw.title), content: String(raw.content || ''), createdAt: raw.createdAt || new Date().toISOString() })).filter(text => text.content) : [];
   safe.tasks = Array.isArray(candidate.tasks) ? candidate.tasks.map(raw => ({ id: raw.id || uid(), text: cleanString(raw.text), date: raw.date || '', done: Boolean(raw.done) })).filter(task => task.text) : [];
   safe.calledHistory = candidate.calledHistory && typeof candidate.calledHistory === 'object' ? candidate.calledHistory : {};
+  safe.settings = candidate.settings && typeof candidate.settings === 'object' ? candidate.settings : {};
   safe.activeClassId = safe.classes.some(schoolClass => schoolClass.id === candidate.activeClassId) ? candidate.activeClassId : (safe.classes[0]?.id || '');
   safe.activeAssessmentId = safe.assessments.some(assessment => assessment.id === candidate.activeAssessmentId) ? candidate.activeAssessmentId : (safe.assessments[0]?.id || '');
+  safe.activeLogId = safe.lessonLogs.some(log => log.id === candidate.activeLogId) ? candidate.activeLogId : '';
+  safe.activeStudentEventId = safe.studentEvents.some(event => event.id === candidate.activeStudentEventId) ? candidate.activeStudentEventId : '';
   return safe;
 }
 
+function readStoredJson(key){
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; }
+  catch { return null; }
+}
+
 function load(){
-  try {
-    const stored = JSON.parse(localStorage.getItem(DATA_KEY));
-    if(stored){ data = normalizeData(stored); return; }
-    const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY));
-    if(legacy){ data = migrateLegacy(legacy); save(); toast('A korábbi dolgozatadatok átkerültek a v13-ba.'); }
-  } catch { data = emptyData(); }
+  const stored = readStoredJson(DATA_KEY);
+  if(stored){ data = normalizeData(stored); return; }
+  const v13 = readStoredJson(V13_DATA_KEY);
+  if(v13){ data = normalizeData(v13); save(); toast('A korábbi helyi adatok átvétele sikeresen megtörtént.'); return; }
+  const legacy = readStoredJson(LEGACY_KEY);
+  if(legacy){ data = migrateLegacy(legacy); save(); toast('A korábbi dolgozatadatok átkerültek a v14-be.'); }
 }
 
 function getClass(id = data.activeClassId){ return data.classes.find(schoolClass => schoolClass.id === id); }
@@ -116,8 +129,11 @@ function dateSortValue(value){ return value ? new Date(`${value}T12:00:00`).getT
 function className(classId){ return getClass(classId)?.name || 'Osztály nélkül'; }
 
 function showTab(tabName){
-  document.querySelectorAll('.tab').forEach(button => button.classList.toggle('active', button.dataset.tab === tabName));
+  document.querySelectorAll('.tab,.mobile-tab').forEach(button => button.classList.toggle('active', button.dataset.tab === tabName));
   document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.toggle('active', panel.id === `tab-${tabName}`));
+  const title = document.querySelector(`.mobile-tab[data-tab="${tabName}"]`)?.textContent || 'Ma';
+  $('mobilePageTitle').textContent = title;
+  closeMobileMenu();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -138,6 +154,15 @@ function populateClassSelect(id, selected = data.activeClassId){
   if(!select.value) select.value = data.activeClassId;
 }
 
+function populateOptionalClassSelect(id, placeholder){
+  const select = $(id);
+  const previous = select.value;
+  select.replaceChildren(new Option(placeholder, ''));
+  data.classes.forEach(schoolClass => select.add(new Option(schoolClass.name, schoolClass.id)));
+  select.disabled = false;
+  select.value = data.classes.some(schoolClass => schoolClass.id === previous) ? previous : '';
+}
+
 function renderSelectors(){
   const assessment = currentAssessment();
   populateClassSelect('globalClassSelect');
@@ -146,6 +171,11 @@ function renderSelectors(){
   populateClassSelect('lessonClass');
   populateClassSelect('textClass');
   populateClassSelect('toolsClass');
+  populateClassSelect('logClass');
+  populateOptionalClassSelect('logFilterClass', 'Minden osztály');
+  populateClassSelect('studentProfileClass');
+  populateClassSelect('eventClass');
+  populateOptionalClassSelect('eventFilterClass', 'Minden osztály');
 }
 
 function renderHero(){
@@ -157,27 +187,33 @@ function renderHero(){
 function renderDashboard(){
   const activeClassId = data.activeClassId;
   const openHomeworks = data.homeworks.filter(homework => homework.classId === activeClassId && !homework.done);
-  const lessons = data.lessons.filter(lesson => lesson.classId === activeClassId);
+  const todaysLogs = data.lessonLogs.filter(log => log.classId === activeClassId && log.date === todayIso() && log.status !== 'elmaradt');
   const assessment = currentAssessment();
   const missingScores = assessment && assessment.classId === activeClassId ? validAssessmentStudents(assessment).filter(student => {
     const result = assessment.results[student.id];
     return !result || (result.status === 'ok' && (result.points === '' || result.points === null || result.points === undefined));
   }).length : 0;
-  $('metricHomeworks').textContent = openHomeworks.length;
-  $('metricLessons').textContent = lessons.length;
+  $('metricHomeworks').textContent = openHomeworks.filter(homework => homework.deadline === todayIso()).length;
+  $('metricLessons').textContent = todaysLogs.length;
   $('metricMissingScores').textContent = missingScores;
+
+  renderLatestCard('latestAssessment', data.assessments.filter(item => item.classId === activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0], item => `${item.title || 'Névtelen dolgozat'} · ${formatDate(item.date)}`, 'Még nincs mentett dolgozat.');
+  renderLatestCard('latestLog', data.lessonLogs.filter(item => item.classId === activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0], item => `${item.subject || 'Tantárgy'} · ${item.topic || 'Téma nélkül'} · ${formatDate(item.date)}`, 'Még nincs mentett órai napló.');
+  renderLatestCard('latestEvent', data.studentEvents.filter(item => item.classId === activeClassId).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0], item => `${item.studentName || 'Tanuló'} · ${eventTypeLabel(item.type)} · ${formatDate(item.date)}`, 'Még nincs mentett tanulói esemény.');
 
   const events = [
     ...openHomeworks.map(homework => ({ date: homework.deadline, type: 'Házi', title: `${homework.subject || 'Tantárgy'} – ${homework.text || 'Feladat nélkül'}` })),
-    ...lessons.map(lesson => ({ date: lesson.date, type: 'Óraterv', title: `${lesson.subject || 'Tantárgy'} – ${lesson.topic || 'Téma nélkül'}` }))
+    ...data.lessons.filter(lesson => lesson.classId === activeClassId).map(lesson => ({ date: lesson.date, type: 'Óravázlat', title: `${lesson.subject || 'Tantárgy'} – ${lesson.topic || 'Téma nélkül'}` })),
+    ...data.lessonLogs.filter(log => log.classId === activeClassId && log.date >= todayIso()).map(log => ({ date: log.date, type: 'Órai napló', title: `${log.subject || 'Tantárgy'} – ${log.topic || 'Téma nélkül'}` }))
   ].sort((a, b) => dateSortValue(a.date) - dateSortValue(b.date)).slice(0, 6);
   const timeline = $('todayTimeline');
+  timeline.className = 'timeline';
   timeline.replaceChildren();
-  if(!events.length){ timeline.innerHTML = '<p class="empty">Még nincs elmentett óraterv vagy nyitott házi az aktív osztályhoz.</p>'; }
+  if(!events.length){ timeline.textContent = 'Nincs ma esedékes házi feladat vagy közelgő mentett bejegyzés.'; timeline.className = 'timeline empty'; }
   events.forEach(event => {
     const item = document.createElement('div'); item.className = 'timeline-item';
     const date = document.createElement('span'); date.className = 'timeline-date'; date.textContent = event.date ? formatDate(event.date) : 'határidő nélkül';
-    const copy = document.createElement('div'); copy.innerHTML = `<b>${event.type}</b><p>${escapeHtml(event.title)}</p>`;
+    const copy = document.createElement('div'); const heading = document.createElement('b'); heading.textContent = event.type; const description = document.createElement('p'); description.textContent = event.title; copy.append(heading, description);
     item.append(date, copy); timeline.append(item);
   });
 
@@ -192,6 +228,14 @@ function renderDashboard(){
     remove.addEventListener('click', () => { data.tasks = data.tasks.filter(candidate => candidate.id !== task.id); save(); renderDashboard(); });
     item.append(check, text, remove); taskList.append(item);
   });
+}
+
+function renderLatestCard(id, item, textBuilder, emptyMessage){
+  const box = $(id); box.replaceChildren();
+  const paragraph = document.createElement('p');
+  paragraph.textContent = item ? textBuilder(item) : emptyMessage;
+  if(!item) paragraph.className = 'empty';
+  box.append(paragraph);
 }
 
 function renderClasses(){
@@ -222,7 +266,7 @@ function renderClasses(){
     const activeCell = document.createElement('td'); const activeInput = document.createElement('input'); activeInput.type = 'checkbox'; activeInput.checked = student.active !== false; activeInput.setAttribute('aria-label', `${student.name} aktív`);
     activeInput.addEventListener('change', () => { student.active = activeInput.checked; save(); renderAll(); }); activeCell.append(activeInput);
     const actionCell = document.createElement('td'); const remove = document.createElement('button'); remove.className = 'danger'; remove.type = 'button'; remove.textContent = 'Törlés';
-    remove.addEventListener('click', () => { schoolClass.students = schoolClass.students.filter(candidate => candidate.id !== student.id); delete data.calledHistory[student.id]; data.assessments.forEach(assessment => delete assessment.results[student.id]); save(); renderAll(); }); actionCell.append(remove);
+    remove.addEventListener('click', () => { schoolClass.students = schoolClass.students.filter(candidate => candidate.id !== student.id); delete data.calledHistory[student.id]; data.assessments.forEach(assessment => delete assessment.results[student.id]); data.studentEvents = data.studentEvents.filter(event => event.studentId !== student.id); save(); renderAll(); }); actionCell.append(remove);
     row.append(nameCell, activeCell, actionCell); rows.append(row);
   });
 }
@@ -551,10 +595,150 @@ function updateActiveClass(classId){
   save(); renderAll();
 }
 
-function renderAll(){ renderSelectors(); renderHero(); renderDashboard(); renderClasses(); renderAssessment(); renderHomeworks(); renderLessons(); renderTextStudents(); }
+const eventTypeLabel = type => ({ hianyzott:'Hiányzott', nincs_hazi:'Nem volt házi feladata', nincs_felszereles:'Nem volt felszerelése', felelt:'Felelt', dicseret:'Dicséretet kapott', figyelmeztetes:'Figyelmeztetést kapott', egyeb:'Egyéb megjegyzés' }[type] || 'Egyéb megjegyzés');
+const logStatusLabel = status => ({ megtartva:'Megtartva', elmaradt:'Elmaradt', helyettesites:'Helyettesítés' }[status] || 'Megtartva');
+
+function logSummary(log){
+  return `ÓRAI NAPLÓ\n\nDátum: ${formatDate(log.date)}\nOsztály: ${className(log.classId)}\nTantárgy: ${log.subject || '–'}\nTéma: ${log.topic || '–'}\nMai tananyag: ${log.content || '–'}\nHázi feladat: ${log.homework || '–'}\nHiányzók: ${log.absentees || '–'}\nFelelők: ${log.responders || '–'}\nMegjegyzés: ${log.note || '–'}\nÁllapot: ${logStatusLabel(log.status)}`;
+}
+
+function currentLogFromForm(){
+  return { date: $('logDate').value || todayIso(), classId: $('logClass').value || data.activeClassId, subject: cleanString($('logSubject').value), topic: cleanString($('logTopic').value), content: cleanString($('logContent').value), homework: cleanString($('logHomework').value), absentees: cleanString($('logAbsentees').value), responders: cleanString($('logResponders').value), note: cleanString($('logNote').value), status: $('logStatus').value };
+}
+
+function updateLogOutput(){ $('logOutput').value = logSummary(currentLogFromForm()); }
+
+function clearLogForm(){
+  data.activeLogId = '';
+  $('logDate').value = todayIso(); $('logClass').value = data.activeClassId; $('logSubject').value = getClass()?.subject || ''; $('logTopic').value = ''; $('logContent').value = ''; $('logHomework').value = ''; $('logAbsentees').value = ''; $('logResponders').value = ''; $('logNote').value = ''; $('logStatus').value = 'megtartva'; updateLogOutput();
+}
+
+function loadLog(log){
+  data.activeLogId = log.id; data.activeClassId = log.classId; save(); renderAll();
+  $('logDate').value = log.date; $('logClass').value = log.classId; $('logSubject').value = log.subject; $('logTopic').value = log.topic; $('logContent').value = log.content; $('logHomework').value = log.homework; $('logAbsentees').value = log.absentees; $('logResponders').value = log.responders; $('logNote').value = log.note; $('logStatus').value = log.status; updateLogOutput(); showTab('logs');
+}
+
+function renderLogs(){
+  const list = $('logList'); list.replaceChildren();
+  const date = $('logFilterDate').value, classId = $('logFilterClass').value, subject = cleanString($('logFilterSubject').value).toLocaleLowerCase('hu-HU');
+  const logs = data.lessonLogs.filter(log => (!date || log.date === date) && (!classId || log.classId === classId) && (!subject || log.subject.toLocaleLowerCase('hu-HU').includes(subject))).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date));
+  if(!logs.length){ const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'Még nincs mentett órai napló a megadott szűréssel.'; list.append(empty); return; }
+  logs.forEach(log => {
+    const item = document.createElement('div'); item.className = 'saved-item';
+    const title = document.createElement('b'); title.textContent = `${formatDate(log.date)} · ${className(log.classId)} · ${log.subject || 'Tantárgy'}`;
+    const small = document.createElement('small'); small.textContent = `${log.topic || 'Téma nélkül'} · ${logStatusLabel(log.status)}`;
+    const actions = document.createElement('div'); actions.className = 'saved-actions';
+    const open = document.createElement('button'); open.className = 'secondary'; open.type = 'button'; open.textContent = 'Megnyitás / szerkesztés'; open.addEventListener('click', () => loadLog(log));
+    const remove = document.createElement('button'); remove.className = 'danger'; remove.type = 'button'; remove.textContent = 'Törlés'; remove.addEventListener('click', () => { if(confirm('Törlöd ezt az órai naplóbejegyzést?')){ data.lessonLogs = data.lessonLogs.filter(item => item.id !== log.id); if(data.activeLogId === log.id) data.activeLogId = ''; save(); renderAll(); } });
+    actions.append(open, remove); item.append(title, small, actions); list.append(item);
+  });
+}
+
+function fillStudentSelect(id, classId, placeholder, query = ''){
+  const select = $(id); const previous = select.value; select.replaceChildren(new Option(placeholder, ''));
+  const normalized = cleanString(query).toLocaleLowerCase('hu-HU');
+  activeStudents(classId).filter(student => !normalized || student.name.toLocaleLowerCase('hu-HU').includes(normalized)).forEach(student => select.add(new Option(student.name, student.id)));
+  select.disabled = !getClass(classId);
+  if([...select.options].some(option => option.value === previous)) select.value = previous;
+}
+
+function studentById(classId, studentId){ return (getClass(classId)?.students || []).find(student => student.id === studentId); }
+
+function eventsForStudent(classId, student){ return data.studentEvents.filter(event => event.classId === classId && (event.studentId === student.id || (!event.studentId && event.studentName === student.name))); }
+
+function assessmentResultsForStudent(classId, student){
+  return data.assessments.filter(assessment => assessment.classId === classId).map(assessment => {
+    const result = resultOf(assessment, student.id); const percent = scorePercent(result, assessment);
+    return percent === null ? null : { assessment, percent: Math.min(100, percent), grade: gradeFromPercent(Math.min(100, percent), assessment.scale) };
+  }).filter(Boolean);
+}
+
+function studentSummary(classId, student){
+  if(!student) return '';
+  const results = assessmentResultsForStudent(classId, student); const events = eventsForStudent(classId, student);
+  const average = results.length ? results.reduce((sum,item) => sum + item.percent, 0) / results.length : null;
+  const count = type => events.filter(event => event.type === type).length;
+  const lastAnswer = events.filter(event => event.type === 'felelt').sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0];
+  const notes = events.filter(event => event.note).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date)).slice(0,3).map(event => `${formatDate(event.date)}: ${event.note}`);
+  return `TANULÓI ADATLAP\n\nTanuló: ${student.name}\nOsztály: ${className(classId)}\nDolgozateredmények: ${results.length ? results.map(item => `${item.assessment.title || 'Dolgozat'} ${item.percent.toFixed(1)}% (${item.grade})`).join('; ') : 'Nincs rögzített eredmény.'}\nÁtlagos százalék: ${average === null ? '–' : `${average.toFixed(1)}%`}\nJegyek: ${results.length ? results.map(item => item.grade).join(', ') : '–'}\nHiányzó házik: ${count('nincs_hazi')}\nHiányzások: ${count('hianyzott')}\nDicséretek: ${count('dicseret')}\nFigyelmeztetések: ${count('figyelmeztetes')}\nUtolsó felelés: ${lastAnswer ? formatDate(lastAnswer.date) : '–'}\nLegutóbbi megjegyzések: ${notes.length ? notes.join(' | ') : '–'}`;
+}
+
+function renderStudentProfile(){
+  const classId = $('studentProfileClass').value || data.activeClassId;
+  fillStudentSelect('studentProfileSelect', classId, 'Válassz tanulót', $('studentSearch').value);
+  const student = studentById(classId, $('studentProfileSelect').value);
+  const box = $('studentProfileOutput'); box.replaceChildren();
+  if(!student){ const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'Válassz osztályt és tanulót az adatlap megjelenítéséhez.'; box.append(empty); return; }
+  const results = assessmentResultsForStudent(classId, student); const events = eventsForStudent(classId, student); const average = results.length ? results.reduce((sum,item) => sum + item.percent, 0) / results.length : null;
+  const header = document.createElement('h3'); header.textContent = `${student.name} · ${className(classId)}`; box.append(header);
+  const grid = document.createElement('div'); grid.className = 'profile-grid';
+  const lastAnswer = events.filter(event => event.type === 'felelt').sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date))[0];
+  [['Dolgozateredmények', results.length ? results.map(item => `${item.assessment.title || 'Dolgozat'}: ${item.percent.toFixed(1)}% (${item.grade})`).join(' · ') : 'Nincs rögzített eredmény.'], ['Átlagos százalék', average === null ? '–' : `${average.toFixed(1)}%`], ['Jegyek', results.length ? results.map(item => item.grade).join(', ') : '–'], ['Hiányzó házik', events.filter(event => event.type === 'nincs_hazi').length], ['Hiányzások', events.filter(event => event.type === 'hianyzott').length], ['Dicséretek', events.filter(event => event.type === 'dicseret').length], ['Figyelmeztetések', events.filter(event => event.type === 'figyelmeztetes').length], ['Utolsó felelés', lastAnswer ? formatDate(lastAnswer.date) : '–'], ['Legutóbbi megjegyzések', events.filter(event => event.note).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date)).slice(0,3).map(event => event.note).join(' · ') || '–']].forEach(([label,value]) => { const row = document.createElement('div'); const labelEl = document.createElement('span'); labelEl.textContent = label; const valueEl = document.createElement('strong'); valueEl.textContent = String(value); row.append(labelEl,valueEl); grid.append(row); });
+  box.append(grid);
+}
+
+function eventSummary(events = data.studentEvents){
+  if(!events.length) return 'TANULÓI ESEMÉNYEK\n\nNincs rögzített esemény.';
+  return `TANULÓI ESEMÉNYEK\n\n${events.slice().sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date)).map(event => `${formatDate(event.date)} · ${className(event.classId)} · ${event.studentName || studentById(event.classId,event.studentId)?.name || 'Tanuló'} · ${eventTypeLabel(event.type)}${event.note ? ` · ${event.note}` : ''}`).join('\n')}`;
+}
+
+function clearEventForm(){ data.activeStudentEventId = ''; $('eventDate').value = todayIso(); $('eventClass').value = data.activeClassId; fillStudentSelect('eventStudent', data.activeClassId, 'Válassz tanulót'); $('eventType').value = 'hianyzott'; $('eventNote').value = ''; }
+
+function loadStudentEvent(event){
+  data.activeStudentEventId = event.id; data.activeClassId = event.classId; save(); renderAll();
+  $('eventDate').value = event.date; $('eventClass').value = event.classId; fillStudentSelect('eventStudent', event.classId, 'Válassz tanulót'); $('eventStudent').value = event.studentId; $('eventType').value = event.type; $('eventNote').value = event.note; showTab('classes');
+}
+
+function renderStudentEvents(){
+  const formClassId = $('eventClass').value || data.activeClassId;
+  fillStudentSelect('eventStudent', formClassId, 'Válassz tanulót');
+  const filterClassId = $('eventFilterClass').value;
+  fillStudentSelect('eventFilterStudent', filterClassId || data.activeClassId, 'Minden tanuló');
+  if(!filterClassId) { $('eventFilterStudent').disabled = false; const select = $('eventFilterStudent'); select.replaceChildren(new Option('Minden tanuló','')); data.classes.forEach(schoolClass => activeStudents(schoolClass.id).forEach(student => select.add(new Option(`${student.name} (${schoolClass.name})`, `${schoolClass.id}:${student.id}`)))); }
+  const date = $('eventFilterDate').value, type = $('eventFilterType').value, studentFilter = $('eventFilterStudent').value;
+  const events = data.studentEvents.filter(event => (!date || event.date === date) && (!filterClassId || event.classId === filterClassId) && (!type || event.type === type) && (!studentFilter || (studentFilter.includes(':') ? `${event.classId}:${event.studentId}` === studentFilter : event.studentId === studentFilter))).sort((a,b) => dateSortValue(b.date) - dateSortValue(a.date));
+  $('eventOutput').value = eventSummary(events);
+  const list = $('eventList'); list.replaceChildren();
+  if(!events.length){ const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'Nincs rögzített esemény a megadott szűréssel.'; list.append(empty); return; }
+  events.forEach(event => { const item = document.createElement('div'); item.className = 'saved-item'; const title = document.createElement('b'); title.textContent = `${formatDate(event.date)} · ${event.studentName || studentById(event.classId,event.studentId)?.name || 'Tanuló'} · ${eventTypeLabel(event.type)}`; const detail = document.createElement('small'); detail.textContent = `${className(event.classId)}${event.note ? ` · ${event.note}` : ''}`; const actions = document.createElement('div'); actions.className = 'saved-actions'; const open = document.createElement('button'); open.className = 'secondary'; open.type = 'button'; open.textContent = 'Megnyitás / szerkesztés'; open.addEventListener('click', () => loadStudentEvent(event)); const remove = document.createElement('button'); remove.className = 'danger'; remove.type = 'button'; remove.textContent = 'Törlés'; remove.addEventListener('click', () => { if(confirm('Törlöd ezt a tanulói eseményt?')){ data.studentEvents = data.studentEvents.filter(item => item.id !== event.id); if(data.activeStudentEventId === event.id) data.activeStudentEventId = ''; save(); renderAll(); } }); actions.append(open,remove); item.append(title,detail,actions); list.append(item); });
+}
+
+function renderSavedTexts(){
+  const list = $('textList'); list.replaceChildren(); const texts = data.texts.filter(text => !text.classId || text.classId === data.activeClassId).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  if(!texts.length){ const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'Még nincs mentett szöveg.'; list.append(empty); return; }
+  texts.forEach(text => { const item = document.createElement('div'); item.className = 'saved-item'; const title = document.createElement('b'); title.textContent = text.title || 'Mentett szöveg'; const detail = document.createElement('small'); detail.textContent = `${className(text.classId)} · ${new Date(text.createdAt).toLocaleString('hu-HU')}`; const actions = document.createElement('div'); actions.className = 'saved-actions'; const open = document.createElement('button'); open.className = 'secondary'; open.type = 'button'; open.textContent = 'Megnyitás'; open.addEventListener('click', () => { data.activeClassId = text.classId || data.activeClassId; $('textOutput').value = text.content; save(); renderAll(); showTab('texts'); }); const remove = document.createElement('button'); remove.className = 'danger'; remove.type = 'button'; remove.textContent = 'Törlés'; remove.addEventListener('click', () => { data.texts = data.texts.filter(item => item.id !== text.id); save(); renderSavedTexts(); }); actions.append(open,remove); item.append(title,detail,actions); list.append(item); });
+}
+
+function buildDemoData(){
+  const demo = emptyData(); const schoolClass = createClass('7.B', 'matematika', ['Minta Anna','Példa Bence','Kitalált Csenge','Teszt Dávid','Minta Emese','Példa Ferenc','Kitalált Gréta','Teszt Hunor']); demo.classes.push(schoolClass); demo.activeClassId = schoolClass.id;
+  const assessment = { id:uid(), classId:schoolClass.id, title:'Törtek dolgozat', subject:'matematika', date:todayIso(), maxPoints:50, scale:clone(DEFAULT_SCALE), results:{}, savedAt:new Date().toISOString() }; [47,42,38,31,28,24,19,45].forEach((points,index) => assessment.results[schoolClass.students[index].id] = { points, bonus:0, status:'ok' }); demo.assessments.push(assessment); demo.activeAssessmentId = assessment.id;
+  demo.homeworks.push({ id:uid(), classId:schoolClass.id, subject:'matematika', deadline:todayIso(), text:'Munkafüzet 32. oldal, 4–6. feladat.', note:'Aki hiányzott, annak is pótolnia kell.', done:false, createdAt:new Date().toISOString() }, { id:uid(), classId:schoolClass.id, subject:'matematika', deadline:new Date(Date.now()+86400000*3).toISOString().slice(0,10), text:'Gyakorló feladatsor a törtek összeadásáról.', note:'', done:false, createdAt:new Date().toISOString() });
+  demo.lessonLogs.push({ id:uid(), date:todayIso(), classId:schoolClass.id, subject:'matematika', topic:'Törtek összeadása', content:'Közös példák és páros gyakorlás.', homework:'Munkafüzet 32. oldal, 4–6. feladat.', absentees:'Teszt Hunor', responders:'Minta Anna, Példa Bence', note:'Következő órán rövid ismétlés.', status:'megtartva', createdAt:new Date().toISOString(), updatedAt:'' }, { id:uid(), date:new Date(Date.now()-86400000).toISOString().slice(0,10), classId:schoolClass.id, subject:'matematika', topic:'Törtek áttekintése', content:'Nevező és számláló ismétlése.', homework:'', absentees:'', responders:'Kitalált Csenge', note:'', status:'megtartva', createdAt:new Date().toISOString(), updatedAt:'' });
+  const addEvent = (index,type,note,date=todayIso()) => demo.studentEvents.push({ id:uid(), date, classId:schoolClass.id, studentId:schoolClass.students[index].id, studentName:schoolClass.students[index].name, type, note, createdAt:new Date().toISOString(), updatedAt:'' }); addEvent(0,'dicseret','Aktívan segítette a csoportmunkát.'); addEvent(1,'felelt','Biztosan használta a tanult fogalmakat.'); addEvent(2,'nincs_hazi','A házi feladat pótlását vállalta.'); addEvent(3,'hianyzott','Igazolt hiányzás.'); addEvent(4,'figyelmeztetes','Az órai felszerelésre figyeljen.');
+  demo.lessons.push({ id:uid(), classId:schoolClass.id, subject:'matematika', topic:'Törtek összeadása', date:todayIso(), output:'ÓRAVÁZLAT\nTantárgy: matematika\nOsztály: 7.B\nTéma: Törtek összeadása\n\nRáhangolódás, közös feldolgozás, páros gyakorlás és kilépőkártya.', createdAt:new Date().toISOString() });
+  demo.texts.push({ id:uid(), classId:schoolClass.id, studentId:schoolClass.students[0].id, title:'Szülői üzenet minta', content:'Kedves Szülő!\n\nSzeretném megdicsérni Minta Anna mai munkáját. Figyelmesen és aktívan dolgozott a matematikaórán.\n\nÜdvözlettel:', createdAt:new Date().toISOString() });
+  return demo;
+}
+
+function applyDemo(mode){
+  const demo = buildDemoData();
+  if(mode === 'replace') data = demo;
+  else { data.classes.push(...demo.classes); data.assessments.push(...demo.assessments); data.homeworks.push(...demo.homeworks); data.lessons.push(...demo.lessons); data.lessonLogs.push(...demo.lessonLogs); data.studentEvents.push(...demo.studentEvents); data.texts.push(...demo.texts); data.activeClassId = demo.activeClassId; data.activeAssessmentId = demo.activeAssessmentId; }
+  save(); $('demoDialog').close(); renderAll(); toast('Demó adatok betöltve.');
+}
+
+let mobileMenuHistory = false;
+function openMobileMenu(){ $('mobileMenu').classList.add('open'); $('mobileOverlay').classList.add('open'); $('mobileMenu').setAttribute('aria-hidden','false'); $('mobileOverlay').setAttribute('aria-hidden','false'); $('mobileMenuBtn').setAttribute('aria-expanded','true'); document.body.classList.add('menu-open'); if(!mobileMenuHistory){ history.pushState({ tanarSegedMenu:true }, ''); mobileMenuHistory = true; } }
+function closeMobileMenu(fromPopState = false){ const wasOpen = $('mobileMenu')?.classList.contains('open'); $('mobileMenu')?.classList.remove('open'); $('mobileOverlay')?.classList.remove('open'); $('mobileMenu')?.setAttribute('aria-hidden','true'); $('mobileOverlay')?.setAttribute('aria-hidden','true'); $('mobileMenuBtn')?.setAttribute('aria-expanded','false'); document.body.classList.remove('menu-open'); if(wasOpen && mobileMenuHistory && !fromPopState){ mobileMenuHistory = false; history.back(); } else if(fromPopState) mobileMenuHistory = false; }
+
+function renderAll(){
+  renderSelectors(); renderHero(); renderDashboard(); renderClasses(); renderAssessment(); renderHomeworks(); renderLessons(); renderTextStudents(); renderLogs(); renderStudentProfile(); renderStudentEvents(); renderSavedTexts();
+  if(!$('logDate').value) clearLogForm();
+  if(!$('eventDate').value) clearEventForm();
+}
 
 function bindEvents(){
-  document.querySelectorAll('.tab').forEach(button => button.addEventListener('click', () => showTab(button.dataset.tab)));
+  document.querySelectorAll('.tab,.mobile-tab').forEach(button => button.addEventListener('click', () => showTab(button.dataset.tab)));
   document.querySelectorAll('.go-tab').forEach(button => button.addEventListener('click', () => showTab(button.dataset.go)));
   document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', () => copyText($(button.dataset.copy).value || $(button.dataset.copy).textContent)));
   ['globalClassSelect','hwClass','lessonClass','textClass','toolsClass'].forEach(id => $(id).addEventListener('change', event => updateActiveClass(event.target.value)));
@@ -565,7 +749,7 @@ function bindEvents(){
   $('taskForm').addEventListener('submit', event => { event.preventDefault(); const text = cleanString($('taskText').value); if(!text) return; data.tasks.push({ id: uid(), text, date: $('taskDate').value, done: false }); $('taskText').value = ''; $('taskDate').value = ''; save(); renderDashboard(); });
   $('addClassBtn').addEventListener('click', () => { const name = cleanString($('newClassName').value); if(!name){ toast('Adj nevet az osztálynak.'); return; } const schoolClass = createClass(name, $('newClassSubject').value); data.classes.push(schoolClass); data.activeClassId = schoolClass.id; const assessment = createAssessment(schoolClass.id); data.assessments.push(assessment); data.activeAssessmentId = assessment.id; $('newClassName').value = ''; $('newClassSubject').value = ''; save(); renderAll(); toast('Osztály létrehozva. Most add hozzá a névsort.'); });
   $('saveClassBtn').addEventListener('click', () => { const schoolClass = getClass(); if(!schoolClass) return; const name = cleanString($('editClassName').value); if(!name){ toast('Az osztály neve nem lehet üres.'); return; } schoolClass.name = name; schoolClass.subject = cleanString($('editClassSubject').value); save(); renderAll(); toast('Osztályadatok mentve.'); });
-  $('deleteClassBtn').addEventListener('click', () => { const schoolClass = getClass(); if(!schoolClass || !confirm(`${schoolClass.name} és a hozzá tartozó dolgozatok, házik, óratervek törlődnek. Folytatod?`)) return; const studentIds = new Set(schoolClass.students.map(student => student.id)); data.classes = data.classes.filter(candidate => candidate.id !== schoolClass.id); data.assessments = data.assessments.filter(assessment => assessment.classId !== schoolClass.id); data.homeworks = data.homeworks.filter(homework => homework.classId !== schoolClass.id); data.lessons = data.lessons.filter(lesson => lesson.classId !== schoolClass.id); studentIds.forEach(id => delete data.calledHistory[id]); data.activeClassId = data.classes[0]?.id || ''; data.activeAssessmentId = data.assessments.find(assessment => assessment.classId === data.activeClassId)?.id || ''; save(); renderAll(); toast('Osztály törölve.'); });
+  $('deleteClassBtn').addEventListener('click', () => { const schoolClass = getClass(); if(!schoolClass || !confirm(`${schoolClass.name} és a hozzá tartozó dolgozatok, házik, óravázlatok, naplók és események törlődnek. Folytatod?`)) return; const studentIds = new Set(schoolClass.students.map(student => student.id)); data.classes = data.classes.filter(candidate => candidate.id !== schoolClass.id); data.assessments = data.assessments.filter(assessment => assessment.classId !== schoolClass.id); data.homeworks = data.homeworks.filter(homework => homework.classId !== schoolClass.id); data.lessons = data.lessons.filter(lesson => lesson.classId !== schoolClass.id); data.lessonLogs = data.lessonLogs.filter(log => log.classId !== schoolClass.id); data.studentEvents = data.studentEvents.filter(event => event.classId !== schoolClass.id); data.texts = data.texts.filter(text => text.classId !== schoolClass.id); studentIds.forEach(id => delete data.calledHistory[id]); data.activeClassId = data.classes[0]?.id || ''; data.activeAssessmentId = data.assessments.find(assessment => assessment.classId === data.activeClassId)?.id || ''; save(); renderAll(); toast('Osztály törölve.'); });
   $('addStudentsBtn').addEventListener('click', () => { addStudentNames($('studentPaste').value); $('studentPaste').value = ''; });
   $('rosterImportInput').addEventListener('change', async event => { const file = event.target.files?.[0]; if(!file) return; try { const text = await file.text(); const lines = text.replace(/^\ufeff/, '').split(/\r?\n/).map(line => line.split(/[;,\t]/)[0]).filter(line => line.trim()); if(lines.length && /név|tanuló/i.test(lines[0])) lines.shift(); addStudentNames(lines.join('\n')); } catch { toast('A CSV-fájl beolvasása nem sikerült.'); } finally { event.target.value = ''; } });
 
@@ -579,17 +763,33 @@ function bindEvents(){
   $('saveHomeworkBtn').addEventListener('click', () => { const classId = $('hwClass').value || data.activeClassId; const text = cleanString($('hwText').value); if(!classId || !text){ toast('Válassz osztályt és írd be a feladatot.'); return; } data.homeworks.push({ id: uid(), classId, subject: cleanString($('hwSubject').value) || getClass(classId)?.subject || '', deadline: $('hwDeadline').value, text, note: cleanString($('hwNote').value), done: false, createdAt: new Date().toISOString() }); data.activeClassId = classId; $('hwText').value = ''; $('hwNote').value = ''; save(); renderAll(); toast('Házi feladat mentve.'); });
   $('clearDoneHomeworksBtn').addEventListener('click', () => { const done = data.homeworks.filter(homework => homework.done).length; if(!done){ toast('Nincs lezárt házi feladat.'); return; } if(confirm(`${done} lezárt házi feladatot törölsz. Folytatod?`)){ data.homeworks = data.homeworks.filter(homework => !homework.done); save(); renderAll(); } });
 
+  $('newLogBtn').addEventListener('click', clearLogForm);
+  ['logDate','logClass','logSubject','logTopic','logContent','logHomework','logAbsentees','logResponders','logNote','logStatus'].forEach(id => $(id).addEventListener('input', updateLogOutput));
+  $('logClass').addEventListener('change', () => { if(!$('logSubject').value) $('logSubject').value = getClass($('logClass').value)?.subject || ''; updateLogOutput(); });
+  $('saveLogBtn').addEventListener('click', () => { const incoming = currentLogFromForm(); if(!incoming.classId || !incoming.subject || !incoming.topic){ toast('Töltsd ki legalább az osztályt, tantárgyat és óratémát.'); return; } let log = data.lessonLogs.find(item => item.id === data.activeLogId); if(log){ Object.assign(log,incoming,{ updatedAt:new Date().toISOString() }); } else { log = { id:uid(), ...incoming, createdAt:new Date().toISOString(), updatedAt:'' }; data.lessonLogs.push(log); data.activeLogId = log.id; } data.activeClassId = incoming.classId; save(); updateLogOutput(); renderAll(); toast('Órai napló mentve.'); });
+  $('logFilterDate').addEventListener('input', renderLogs); $('logFilterClass').addEventListener('change', renderLogs); $('logFilterSubject').addEventListener('input', renderLogs); $('clearLogFiltersBtn').addEventListener('click', () => { $('logFilterDate').value = ''; $('logFilterClass').value = ''; $('logFilterSubject').value = ''; renderLogs(); });
+
   $('lessonClass').addEventListener('change', () => { const schoolClass = getClass($('lessonClass').value); if(schoolClass && !$('lessonSubject').value) $('lessonSubject').value = schoolClass.subject; });
   $('generateLessonBtn').addEventListener('click', generateLesson);
   $('saveLessonBtn').addEventListener('click', () => { const classId = $('lessonClass').value || data.activeClassId; const output = $('lessonOutput').value.trim(); if(!classId || !output || output.startsWith('Itt jelenik')){ toast('Előbb készíts óratervet.'); return; } data.lessons.push({ id: uid(), classId, subject: cleanString($('lessonSubject').value) || getClass(classId)?.subject || '', topic: cleanString($('lessonTopic').value), date: $('lessonDate').value || todayIso(), output, createdAt: new Date().toISOString() }); data.activeClassId = classId; save(); renderAll(); toast('Óraterv mentve.'); });
   $('printLessonBtn').addEventListener('click', () => { showTab('lesson'); window.print(); });
 
   $('generateTextBtn').addEventListener('click', generateText);
+  $('saveTextBtn').addEventListener('click', () => { const content = cleanString($('textOutput').value); if(!content || content.startsWith('Itt jelenik')){ toast('Előbb készíts vagy írj be szöveget.'); return; } data.texts.push({ id:uid(), classId:$('textClass').value || data.activeClassId, studentId:$('txtStudent').value || '', title:cleanString($('txtTopic').value) || $('txtType').selectedOptions[0].textContent, content, createdAt:new Date().toISOString() }); save(); renderSavedTexts(); toast('Szöveg mentve.'); });
+
+  $('studentProfileClass').addEventListener('change', () => renderStudentProfile()); $('studentSearch').addEventListener('input', renderStudentProfile); $('studentProfileSelect').addEventListener('change', renderStudentProfile); $('copyStudentSummaryBtn').addEventListener('click', () => copyText(studentSummary($('studentProfileClass').value || data.activeClassId, studentById($('studentProfileClass').value || data.activeClassId, $('studentProfileSelect').value))));
+  $('newEventBtn').addEventListener('click', clearEventForm); $('eventClass').addEventListener('change', () => fillStudentSelect('eventStudent', $('eventClass').value, 'Válassz tanulót'));
+  $('saveEventBtn').addEventListener('click', () => { const classId = $('eventClass').value || data.activeClassId; const student = studentById(classId, $('eventStudent').value); if(!classId || !student){ toast('Válassz osztályt és tanulót.'); return; } const incoming = { date:$('eventDate').value || todayIso(), classId, studentId:student.id, studentName:student.name, type:$('eventType').value, note:cleanString($('eventNote').value) }; let event = data.studentEvents.find(item => item.id === data.activeStudentEventId); if(event){ Object.assign(event,incoming,{updatedAt:new Date().toISOString()}); } else { event = {id:uid(),...incoming,createdAt:new Date().toISOString(),updatedAt:''}; data.studentEvents.push(event); data.activeStudentEventId = event.id; } data.activeClassId = classId; save(); renderAll(); toast('Tanulói esemény mentve.'); });
+  $('eventFilterDate').addEventListener('input', renderStudentEvents); $('eventFilterClass').addEventListener('change', renderStudentEvents); $('eventFilterStudent').addEventListener('change', renderStudentEvents); $('eventFilterType').addEventListener('change', renderStudentEvents); $('clearEventFiltersBtn').addEventListener('click', () => { $('eventFilterDate').value = ''; $('eventFilterClass').value = ''; $('eventFilterStudent').value = ''; $('eventFilterType').value = ''; renderStudentEvents(); });
   $('pickRandomBtn').addEventListener('click', pickRandom); $('makeGroupsBtn').addEventListener('click', makeGroups); $('resetCalledBtn').addEventListener('click', () => { if(confirm('Törlöd a felelőválasztási előzményeket?')){ data.calledHistory = {}; save(); toast('Felelőelőzmények törölve.'); } });
 
-  $('backupBtn').addEventListener('click', () => download(`tanarseged-mentes-${todayIso()}.json`, JSON.stringify({ app: 'tanarseged-v13', exportedAt: new Date().toISOString(), data }, null, 2), 'application/json'));
-  $('restoreInput').addEventListener('change', async event => { const file = event.target.files?.[0]; if(!file) return; try { const parsed = JSON.parse(await file.text()); if(parsed.app !== 'tanarseged-v13' || !parsed.data) throw new Error('invalid'); if(!confirm('A visszaállítás felülírja a jelenlegi helyi adatokat. Folytatod?')) return; data = normalizeData(parsed.data); save(); renderAll(); toast('Mentés sikeresen visszaállítva.'); } catch { toast('Ez nem érvényes TanárSegéd v13 mentés.'); } finally { event.target.value = ''; } });
+  $('backupBtn').addEventListener('click', () => download(`tanarseged-pro-v14-mentes-${todayIso()}.json`, JSON.stringify({ app: 'tanarseged-pro-v14', version:14, exportedAt: new Date().toISOString(), data }, null, 2), 'application/json'));
+  $('restoreInput').addEventListener('change', async event => { const file = event.target.files?.[0]; if(!file) return; try { const parsed = JSON.parse(await file.text()); if(parsed.app !== 'tanarseged-pro-v14' || parsed.version !== 14 || !parsed.data || typeof parsed.data !== 'object') throw new Error('invalid'); if(!confirm('A visszaállítás felülírja a jelenlegi helyi adatokat. Folytatod?')) return; data = normalizeData(parsed.data); save(); renderAll(); toast('Mentés sikeresen visszaállítva.'); } catch { toast('A kiválasztott fájl nem érvényes TanárSegéd PRO v14 mentés.'); } finally { event.target.value = ''; } });
+  $('clearAllBtn').addEventListener('click', () => { if(!confirm('Biztosan törlöd az összes v14-es helyi adatot?')) return; if(prompt('Második megerősítés: írd be pontosan ezt: TÖRLÉS') !== 'TÖRLÉS'){ toast('Az adatok törlése megszakítva.'); return; } data = emptyData(); save(); renderAll(); clearLogForm(); clearEventForm(); toast('Minden v14-es helyi adat törölve.'); });
+  $('demoDataBtn').addEventListener('click', () => $('demoDialog').showModal()); $('demoAppendBtn').addEventListener('click', () => applyDemo('append')); $('demoReplaceBtn').addEventListener('click', () => applyDemo('replace')); $('demoCancelBtn').addEventListener('click', () => $('demoDialog').close());
+  $('feedbackBtn').addEventListener('click', () => { if(!FEEDBACK_URL){ toast('A visszajelző űrlap linkje még nincs beállítva.'); return; } window.open(FEEDBACK_URL, '_blank', 'noopener'); });
   $('privacyBtn').addEventListener('click', () => $('privacyDialog').showModal()); $('closePrivacyBtn').addEventListener('click', () => $('privacyDialog').close());
+  $('mobileMenuBtn').addEventListener('click', () => $('mobileMenu').classList.contains('open') ? closeMobileMenu() : openMobileMenu()); $('mobileMenuClose').addEventListener('click', () => closeMobileMenu()); $('mobileOverlay').addEventListener('click', () => closeMobileMenu()); document.addEventListener('keydown', event => { if(event.key === 'Escape' && $('mobileMenu').classList.contains('open')) closeMobileMenu(); }); window.addEventListener('popstate', () => { if($('mobileMenu').classList.contains('open')) closeMobileMenu(true); });
 }
 
 load();
